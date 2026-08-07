@@ -1,7 +1,7 @@
 package com.potential.goodquestion.domain.activity.repository;
 
 import com.potential.goodquestion.domain.activity.entity.Activity;
-import com.potential.goodquestion.domain.session.entity.StorySession;
+import com.potential.goodquestion.domain.storysession.entity.StorySession;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 

@@ -1,13 +1,13 @@
-package com.potential.goodquestion.domain.session.dto;
+package com.potential.goodquestion.domain.storysession.dto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 세션 요청 DTO 모음
+ * 스토리 세션 요청 DTO 모음
  */
-public class SessionRequestDto {
+public class StorySessionRequestDto {
 
     /**
      * 세션 생성 요청 (POST /api/stories/{storyId}/sessions)

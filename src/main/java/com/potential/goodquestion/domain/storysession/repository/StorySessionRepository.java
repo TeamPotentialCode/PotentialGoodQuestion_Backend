@@ -1,22 +1,18 @@
-package com.potential.goodquestion.domain.session.repository;
+package com.potential.goodquestion.domain.storysession.repository;
 
-import com.potential.goodquestion.domain.session.entity.StorySession;
+import com.potential.goodquestion.domain.storysession.entity.StorySession;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  * StorySession 레포지토리
- *
- * 주요 쿼리:
- * - findByIdAndStatus: 전우선 UtteranceService에서 진행 중인 세션 조회 시 사용
- * - findByChildIdOrderByLastActivityAtDesc: 아이의 세션 이력 조회
  */
 public interface StorySessionRepository extends JpaRepository<StorySession, Long> {
 
     /**
-     * 세션 ID + 상태로 조회 (전우선 UtteranceService 사용)
-     * status 값: "IN_PROGRESS" 또는 "COMPLETED"
+     * 세션 ID와 상태로 조회
+     * 전우선 UtteranceService에서 IN_PROGRESS 세션 조회 시 사용
      */
     Optional<StorySession> findByIdAndStatus(Long id, String status);
 
@@ -26,7 +22,8 @@ public interface StorySessionRepository extends JpaRepository<StorySession, Long
     List<StorySession> findByChildIdOrderByLastActivityAtDesc(Long childId);
 
     /**
-     * 특정 아이 + 이야기 + 상태로 조회 (이어하기 복귀 판단용)
+     * 아이 + 이야기 + 상태로 진행 중인 세션 조회
+     * 중복 세션 여부 확인 시 사용 가능
      */
     Optional<StorySession> findByChildIdAndStoryIdAndStatus(Long childId, Long storyId, String status);
 }

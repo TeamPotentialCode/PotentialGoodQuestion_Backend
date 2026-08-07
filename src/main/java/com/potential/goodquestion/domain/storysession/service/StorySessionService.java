@@ -1,14 +1,14 @@
-package com.potential.goodquestion.domain.session.service;
+package com.potential.goodquestion.domain.storysession.service;
 
 import com.potential.goodquestion.common.code.ChildErrorCode;
 import com.potential.goodquestion.common.code.SessionErrorCode;
 import com.potential.goodquestion.common.exception.CustomException;
 import com.potential.goodquestion.domain.child.entity.Child;
 import com.potential.goodquestion.domain.child.repository.ChildRepository;
-import com.potential.goodquestion.domain.session.dto.SessionRequestDto;
-import com.potential.goodquestion.domain.session.dto.SessionResponseDto;
-import com.potential.goodquestion.domain.session.entity.StorySession;
-import com.potential.goodquestion.domain.session.repository.StorySessionRepository;
+import com.potential.goodquestion.domain.storysession.dto.StorySessionRequestDto;
+import com.potential.goodquestion.domain.storysession.dto.StorySessionResponseDto;
+import com.potential.goodquestion.domain.storysession.entity.StorySession;
+import com.potential.goodquestion.domain.storysession.repository.StorySessionRepository;
 import com.potential.goodquestion.domain.story.entity.Story;
 import com.potential.goodquestion.domain.story.repository.StoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 세션 서비스
+ * 스토리 세션 서비스
  *
  * 담당 API:
  * - POST /api/stories/{storyId}/sessions : 새 학습 세션 시작
@@ -29,7 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class SessionService {
+public class StorySessionService {
 
     private final StorySessionRepository storySessionRepository;
     private final StoryRepository storyRepository;
@@ -41,14 +41,14 @@ public class SessionService {
      * 이미 IN_PROGRESS 상태의 세션이 있어도 새로 생성
      * (기획상 한 이야기를 여러 번 시작 가능)
      *
-     * @param storyId   이야기 ID (URL PathVariable)
-     * @param parentId  JWT에서 추출한 보호자 ID (소유권 검증)
-     * @param request   childId 포함
+     * @param storyId  이야기 ID (URL PathVariable)
+     * @param parentId JWT에서 추출한 보호자 ID (소유권 검증)
+     * @param request  childId 포함
      * @return 생성된 세션 정보
      */
     @Transactional
-    public SessionResponseDto.SessionInfo createSession(Long storyId, Long parentId,
-            SessionRequestDto.Create request) {
+    public StorySessionResponseDto.SessionInfo createSession(Long storyId, Long parentId,
+            StorySessionRequestDto.Create request) {
 
         // 이야기 조회
         Story story = storyRepository.findById(storyId)
@@ -59,7 +59,7 @@ public class SessionService {
 
         // 세션 생성 및 저장
         StorySession session = StorySession.create(child, story);
-        return SessionResponseDto.SessionInfo.from(storySessionRepository.save(session));
+        return StorySessionResponseDto.SessionInfo.from(storySessionRepository.save(session));
     }
 
     /**
@@ -69,7 +69,7 @@ public class SessionService {
      * @param parentId  JWT에서 추출한 보호자 ID (소유권 검증)
      * @return 세션 정보 (currentSceneId 포함)
      */
-    public SessionResponseDto.SessionInfo getSession(Long sessionId, Long parentId) {
+    public StorySessionResponseDto.SessionInfo getSession(Long sessionId, Long parentId) {
 
         StorySession session = storySessionRepository.findById(sessionId)
                 .orElseThrow(() -> new CustomException(SessionErrorCode.SESSION_NOT_FOUND));
@@ -79,7 +79,7 @@ public class SessionService {
             throw new CustomException(SessionErrorCode.SESSION_ACCESS_DENIED);
         }
 
-        return SessionResponseDto.SessionInfo.from(session);
+        return StorySessionResponseDto.SessionInfo.from(session);
     }
 
     // ─────────── private ────────────────

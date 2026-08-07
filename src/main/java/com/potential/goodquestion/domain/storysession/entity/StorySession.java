@@ -1,4 +1,4 @@
-package com.potential.goodquestion.domain.session.entity;
+package com.potential.goodquestion.domain.storysession.entity;
 
 import com.potential.goodquestion.common.base.BaseEntity;
 import com.potential.goodquestion.domain.child.entity.Child;
@@ -22,7 +22,7 @@ import org.hibernate.annotations.Comment;
 /**
  * 아이의 이야기 학습 세션 엔티티
  *
- * 기존 Session.java를 대체하는 엔티티. 테이블명: story_sessions
+ * 테이블명: story_sessions
  *
  * 담당 필드 설명:
  * - currentSceneId: 현재 진행 중인 장면 ID
@@ -151,14 +151,14 @@ public class StorySession extends BaseEntity {
      * 발화 처리 후 세션 상태 일괄 갱신
      * 전우선 UtteranceService에서 호출
      *
-     * @param newAccumulatedElements 갱신된 누적 요소 JSON
-     * @param newDetectedElements    이번 턴 탐지 요소 JSON
-     * @param responseMode           응답 모드 (NORMAL/GUIDED/CLOSING)
-     * @param guidanceTarget         유도 대상 요소 (GUIDED일 때만)
-     * @param turnsWithoutNewElement 신규 요소 없는 연속 턴 수
+     * @param newAccumulatedElements  갱신된 누적 요소 JSON
+     * @param newDetectedElements     이번 턴 탐지 요소 JSON
+     * @param responseMode            응답 모드 (NORMAL/GUIDED/CLOSING)
+     * @param guidanceTarget          유도 대상 요소 (GUIDED일 때만)
+     * @param turnsWithoutNewElement  신규 요소 없는 연속 턴 수
      * @param consecutiveLowInfoTurns 저정보 발화 연속 횟수
-     * @param goalMet                장면 목표 달성 여부
-     * @param endReason              장면 종료 이유
+     * @param goalMet                 장면 목표 달성 여부
+     * @param endReason               장면 종료 이유
      */
     public void updateAfterUtterance(
             String newAccumulatedElements,

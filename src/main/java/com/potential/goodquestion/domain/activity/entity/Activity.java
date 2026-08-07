@@ -1,7 +1,7 @@
 package com.potential.goodquestion.domain.activity.entity;
 
 import com.potential.goodquestion.common.base.BaseEntity;
-import com.potential.goodquestion.domain.session.entity.StorySession;
+import com.potential.goodquestion.domain.storysession.entity.StorySession;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

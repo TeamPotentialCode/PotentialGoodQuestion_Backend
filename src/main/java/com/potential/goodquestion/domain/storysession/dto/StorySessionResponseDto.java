@@ -1,14 +1,14 @@
-package com.potential.goodquestion.domain.session.dto;
+package com.potential.goodquestion.domain.storysession.dto;
 
-import com.potential.goodquestion.domain.session.entity.StorySession;
+import com.potential.goodquestion.domain.storysession.entity.StorySession;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
 
 /**
- * 세션 응답 DTO 모음
+ * 스토리 세션 응답 DTO 모음
  */
-public class SessionResponseDto {
+public class StorySessionResponseDto {
 
     /**
      * 세션 정보 응답

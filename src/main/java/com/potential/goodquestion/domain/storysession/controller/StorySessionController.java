@@ -1,10 +1,10 @@
-package com.potential.goodquestion.domain.session.controller;
+package com.potential.goodquestion.domain.storysession.controller;
 
 import com.potential.goodquestion.common.response.ApiResponse;
 import com.potential.goodquestion.common.security.CustomUserPrincipal;
-import com.potential.goodquestion.domain.session.dto.SessionRequestDto;
-import com.potential.goodquestion.domain.session.dto.SessionResponseDto;
-import com.potential.goodquestion.domain.session.service.SessionService;
+import com.potential.goodquestion.domain.storysession.dto.StorySessionRequestDto;
+import com.potential.goodquestion.domain.storysession.dto.StorySessionResponseDto;
+import com.potential.goodquestion.domain.storysession.service.StorySessionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 세션 컨트롤러
+ * 스토리 세션 컨트롤러
  *
  * POST /api/stories/{storyId}/sessions : 새 학습 세션 시작
  * GET  /api/sessions/{sessionId}       : 세션 정보 조회 (이어하기 복귀)
@@ -27,9 +27,9 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequiredArgsConstructor
-public class SessionController {
+public class StorySessionController {
 
-    private final SessionService sessionService;
+    private final StorySessionService storySessionService;
 
     /**
      * 새 학습 세션 시작
@@ -41,13 +41,13 @@ public class SessionController {
      * @return 생성된 세션 정보
      */
     @PostMapping("/api/stories/{storyId}/sessions")
-    public ResponseEntity<ApiResponse<SessionResponseDto.SessionInfo>> createSession(
+    public ResponseEntity<ApiResponse<StorySessionResponseDto.SessionInfo>> createSession(
             @PathVariable Long storyId,
             @AuthenticationPrincipal CustomUserPrincipal principal,
-            @Valid @RequestBody SessionRequestDto.Create request) {
+            @Valid @RequestBody StorySessionRequestDto.Create request) {
 
-        SessionResponseDto.SessionInfo session =
-                sessionService.createSession(storyId, principal.getParentId(), request);
+        StorySessionResponseDto.SessionInfo session =
+                storySessionService.createSession(storyId, principal.getParentId(), request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("학습 세션이 시작되었습니다.", session));
     }
@@ -61,12 +61,12 @@ public class SessionController {
      * @return 세션 정보 (현재 장면 ID, 상태 등)
      */
     @GetMapping("/api/sessions/{sessionId}")
-    public ResponseEntity<ApiResponse<SessionResponseDto.SessionInfo>> getSession(
+    public ResponseEntity<ApiResponse<StorySessionResponseDto.SessionInfo>> getSession(
             @PathVariable Long sessionId,
             @AuthenticationPrincipal CustomUserPrincipal principal) {
 
-        SessionResponseDto.SessionInfo session =
-                sessionService.getSession(sessionId, principal.getParentId());
+        StorySessionResponseDto.SessionInfo session =
+                storySessionService.getSession(sessionId, principal.getParentId());
         return ResponseEntity.ok(ApiResponse.success("세션 정보를 조회했습니다.", session));
     }
 }
