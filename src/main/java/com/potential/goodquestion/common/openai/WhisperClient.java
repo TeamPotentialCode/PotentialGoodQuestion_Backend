@@ -2,6 +2,7 @@ package com.potential.goodquestion.common.openai;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
+import java.util.Set;
 import com.potential.goodquestion.common.code.AiErrorCode;
 import com.potential.goodquestion.common.exception.CustomException;
 import lombok.RequiredArgsConstructor;
@@ -28,11 +29,13 @@ public class WhisperClient {
             "참다, 창피하다, 부끄럽다, 솔직하게, 특별한 힘, 도움이 되다, 이상하게 생각하다, " +
             "배가 아파요, 방귀 나갑니다, 우수수 떨어졌습니다";
 
+    private static final Set<String> SUPPORTED_EXTENSIONS =
+            Set.of("flac", "m4a", "mp3", "mp4", "mpeg", "mpga", "oga", "ogg", "wav", "webm");
+
     public String transcribe(MultipartFile audioFile) {
         try {
             byte[] audioBytes = audioFile.getBytes();
-            String filename = audioFile.getOriginalFilename() != null
-                    ? audioFile.getOriginalFilename() : "audio.webm";
+            String filename = resolveFilename(audioFile);
 
             var multipart = new LinkedMultiValueMap<String, Object>();
             multipart.add("file", new ByteArrayResource(audioBytes) {
@@ -53,5 +56,26 @@ public class WhisperClient {
         } catch (IOException e) {
             throw new CustomException(AiErrorCode.STT_FAILED);
         }
+    }
+
+    private String resolveFilename(MultipartFile audioFile) {
+        String original = audioFile.getOriginalFilename();
+        if (original != null && !original.isBlank()) {
+            String ext = original.contains(".")
+                    ? original.substring(original.lastIndexOf('.') + 1).toLowerCase()
+                    : "";
+            if (SUPPORTED_EXTENSIONS.contains(ext)) return original;
+        }
+        // Content-Type으로 확장자 추론
+        String contentType = audioFile.getContentType();
+        if (contentType != null) {
+            if (contentType.contains("webm")) return "audio.webm";
+            if (contentType.contains("mp4")) return "audio.mp4";
+            if (contentType.contains("m4a") || contentType.contains("mp4a")) return "audio.m4a";
+            if (contentType.contains("ogg")) return "audio.ogg";
+            if (contentType.contains("wav")) return "audio.wav";
+            if (contentType.contains("mpeg") || contentType.contains("mp3")) return "audio.mp3";
+        }
+        return "audio.webm"; // 기본값 (태블릿 녹음 포맷)
     }
 }

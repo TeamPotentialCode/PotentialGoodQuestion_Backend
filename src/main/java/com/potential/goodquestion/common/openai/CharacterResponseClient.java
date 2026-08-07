@@ -48,18 +48,22 @@ public class CharacterResponseClient {
                 "temperature", 0.7
         );
 
-        try {
-            String rawJson = openAiRestClient.post()
-                    .uri("/chat/completions")
-                    .body(body)
-                    .retrieve()
-                    .body(JsonNode.class)
-                    .get("choices").get(0).get("message").get("content")
-                    .asText();
-            return objectMapper.readValue(rawJson, CharacterResponse.class);
-        } catch (Exception e) {
-            throw new RuntimeException("캐릭터 응답 LLM 호출 실패: " + e.getMessage(), e);
+        Exception lastException = null;
+        for (int attempt = 0; attempt < 2; attempt++) {
+            try {
+                String rawJson = openAiRestClient.post()
+                        .uri("/chat/completions")
+                        .body(body)
+                        .retrieve()
+                        .body(JsonNode.class)
+                        .get("choices").get(0).get("message").get("content")
+                        .asText();
+                return objectMapper.readValue(rawJson, CharacterResponse.class);
+            } catch (Exception e) {
+                lastException = e;
+            }
         }
+        throw new RuntimeException("캐릭터 응답 LLM 호출 실패 (2회 재시도): " + lastException.getMessage(), lastException);
     }
 
     private String buildUserPrompt(CharacterRequest req) {

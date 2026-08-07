@@ -47,18 +47,22 @@ public class AnalysisLlmClient {
                 "temperature", 0.3
         );
 
-        try {
-            String rawJson = openAiRestClient.post()
-                    .uri("/chat/completions")
-                    .body(body)
-                    .retrieve()
-                    .body(JsonNode.class)
-                    .get("choices").get(0).get("message").get("content")
-                    .asText();
-            return objectMapper.readValue(rawJson, AnalysisResponse.class);
-        } catch (Exception e) {
-            throw new RuntimeException("발화 분석 LLM 호출 실패: " + e.getMessage(), e);
+        Exception lastException = null;
+        for (int attempt = 0; attempt < 2; attempt++) {
+            try {
+                String rawJson = openAiRestClient.post()
+                        .uri("/chat/completions")
+                        .body(body)
+                        .retrieve()
+                        .body(JsonNode.class)
+                        .get("choices").get(0).get("message").get("content")
+                        .asText();
+                return objectMapper.readValue(rawJson, AnalysisResponse.class);
+            } catch (Exception e) {
+                lastException = e;
+            }
         }
+        throw new RuntimeException("발화 분석 LLM 호출 실패 (2회 재시도): " + lastException.getMessage(), lastException);
     }
 
     private String buildUserPrompt(AnalysisRequest req) {

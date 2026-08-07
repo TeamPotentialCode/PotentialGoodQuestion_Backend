@@ -47,6 +47,7 @@ public class UtteranceService {
     private final StorySceneRepository sceneRepository;
     private final MessageRepository messageRepository;
     private final UtteranceAnalysisRepository analysisRepository;
+    private final UtteranceAnalysisAsyncSaver asyncSaver;
     private final AnalysisLlmClient analysisLlmClient;
     private final CharacterResponseClient characterResponseClient;
     private final PostProcessor postProcessor;
@@ -74,13 +75,7 @@ public class UtteranceService {
         List<DetectedElement> processedElements = postProcessor.process(
                 rawAnalysis.detectedElements(), request.text());
 
-        analysisRepository.save(UtteranceAnalysis.builder()
-                .message(childMessage)
-                .childIntent(rawAnalysis.childIntent())
-                .mainPoint(rawAnalysis.mainPoint())
-                .detectedElements(jsonUtils.toJson(processedElements))
-                .utteranceValidity(rawAnalysis.utteranceValidity())
-                .build());
+        asyncSaver.save(childMessage, rawAnalysis, processedElements);
 
         Set<String> accumulated = new HashSet<>(jsonUtils.toStringSet(session.getAccumulatedElements()));
         Set<String> newlyDetected = processedElements.stream()
@@ -140,10 +135,16 @@ public class UtteranceService {
                 characterMessage, sceneCompleted, nextSceneId, showMission);
     }
 
+    private static final int SCENE_CONTEXT_MAX_LENGTH = 300;
+
     private AnalysisResponse callAnalysisLlm(StoryScene scene, String prevCharMsg, String childUtterance) {
         try {
+            String sceneContext = scene.getSceneDescription() + (scene.getConflict() != null ? "\n" + scene.getConflict() : "");
+            if (sceneContext.length() > SCENE_CONTEXT_MAX_LENGTH) {
+                sceneContext = sceneContext.substring(0, SCENE_CONTEXT_MAX_LENGTH);
+            }
             return analysisLlmClient.analyze(new AnalysisRequest(
-                    scene.getSceneDescription() + (scene.getConflict() != null ? "\n" + scene.getConflict() : ""),
+                    sceneContext,
                     scene.getSceneGoal(),
                     prevCharMsg,
                     childUtterance,
