@@ -68,10 +68,11 @@ public class UtteranceService {
                 .map(Message::getText)
                 .orElse(null);
 
+        String sanitizedText = sanitize(request.text());
         Message childMessage = messageRepository.save(
-                Message.ofChild(session, scene, request.text(), request.sttRawText()));
+                Message.ofChild(session, scene, sanitizedText, request.sttRawText()));
 
-        AnalysisResponse rawAnalysis = callAnalysisLlm(scene, prevCharacterMsg, request.text());
+        AnalysisResponse rawAnalysis = callAnalysisLlm(scene, prevCharacterMsg, sanitizedText);
         List<DetectedElement> processedElements = postProcessor.process(
                 rawAnalysis.detectedElements(), request.text());
 
@@ -136,6 +137,7 @@ public class UtteranceService {
     }
 
     private static final int SCENE_CONTEXT_MAX_LENGTH = 300;
+    private static final int UTTERANCE_MAX_LENGTH = 500;
 
     private AnalysisResponse callAnalysisLlm(StoryScene scene, String prevCharMsg, String childUtterance) {
         try {
@@ -211,6 +213,19 @@ public class UtteranceService {
     private boolean judgeResult_isClosing(SessionState state) {
         return state.missingElements().isEmpty() && state.turnCount() >= state.preferredTurns()
                 || state.turnCount() >= state.maxTurns();
+    }
+
+    private String sanitize(String text) {
+        if (text == null) return "";
+        // 앞뒤 공백 제거 + 연속 공백 단일화
+        String cleaned = text.strip().replaceAll("\\s+", " ");
+        // 제어문자 제거 (탭, 개행 등 제외한 비표시 문자)
+        cleaned = cleaned.replaceAll("[\\p{Cntrl}&&[^\t\n\r]]", "");
+        // 최대 길이 제한
+        if (cleaned.length() > UTTERANCE_MAX_LENGTH) {
+            cleaned = cleaned.substring(0, UTTERANCE_MAX_LENGTH);
+        }
+        return cleaned;
     }
 
     private String replaceName(String text, String childName) {
