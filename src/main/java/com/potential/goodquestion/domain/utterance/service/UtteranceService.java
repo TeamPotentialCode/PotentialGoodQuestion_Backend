@@ -8,7 +8,9 @@ import com.potential.goodquestion.common.engine.ProgressJudgeEngine;
 import com.potential.goodquestion.common.engine.vo.DetectedElement;
 import com.potential.goodquestion.common.engine.vo.ProgressJudgeResult;
 import com.potential.goodquestion.common.engine.vo.SessionState;
+import com.potential.goodquestion.common.engine.ReactionKeyResolver;
 import com.potential.goodquestion.common.enums.ClosingReason;
+import com.potential.goodquestion.common.enums.ReactionKey;
 import com.potential.goodquestion.common.enums.ResponseMode;
 import com.potential.goodquestion.common.enums.SpeakerType;
 import com.potential.goodquestion.common.exception.CustomException;
@@ -53,6 +55,7 @@ public class UtteranceService {
     private final PostProcessor postProcessor;
     private final ProgressJudgeEngine progressJudgeEngine;
     private final GuidanceTargetSelector guidanceTargetSelector;
+    private final ReactionKeyResolver reactionKeyResolver;
     private final JsonUtils jsonUtils;
 
     public UtteranceResponse processUtterance(Long sessionId, UtteranceRequest request) {
@@ -102,6 +105,10 @@ public class UtteranceService {
 
         String guidanceTarget = resolveGuidanceTarget(judgeResult, state, session, scene);
 
+        ReactionKey reactionKey = reactionKeyResolver.resolve(
+                rawAnalysis.childIntent(), rawAnalysis.utteranceValidity(), processedElements);
+        String softRemainingWorry = resolveSoftRemainingWorry(judgeResult, state, reactionKey, scene);
+
         session.updateAfterUtterance(
                 jsonUtils.toJson(new ArrayList<>(accumulated)),
                 jsonUtils.toJson(processedElements),
@@ -126,7 +133,8 @@ public class UtteranceService {
             characterMessage = messageRepository.save(
                     Message.ofCharacter(session, scene, generateCharacterResponse(
                             scene, request.text(), rawAnalysis.childIntent(),
-                            judgeResult, guidanceTarget, prevCharacterMsg)));
+                            judgeResult, guidanceTarget, prevCharacterMsg,
+                            reactionKey, softRemainingWorry)));
         }
 
         boolean showMission = resolveMissionDisplay(scene, state, newlyDetected);
@@ -160,7 +168,8 @@ public class UtteranceService {
 
     private String generateCharacterResponse(StoryScene scene, String childUtterance,
             String childIntent, ProgressJudgeResult judgeResult,
-            String guidanceTarget, String prevCharMsg) {
+            String guidanceTarget, String prevCharMsg,
+            ReactionKey reactionKey, String softRemainingWorry) {
         try {
             Map<String, String> worries = jsonUtils.toStringMap(scene.getRemainingWorries());
             return characterResponseClient.generate(new CharacterRequest(
@@ -168,14 +177,30 @@ public class UtteranceService {
                     scene.getSceneDescription(),
                     childUtterance,
                     childIntent,
+                    reactionKey.name(),
                     judgeResult.mode().name(),
                     guidanceTarget,
                     guidanceTarget != null ? worries.get(guidanceTarget) : null,
+                    softRemainingWorry,
                     prevCharMsg
             )).text();
         } catch (Exception e) {
             throw new CustomException(AiErrorCode.CHARACTER_RESPONSE_FAILED);
         }
+    }
+
+    private String resolveSoftRemainingWorry(ProgressJudgeResult judgeResult, SessionState state,
+            ReactionKey reactionKey, StoryScene scene) {
+        if (judgeResult.mode() != ResponseMode.NORMAL) return null;
+        if (state.newlyDetectedElements().isEmpty()) return null;
+        if (state.missingElements().isEmpty()) return null;
+        if (reactionKey.isSoftCueSkip()) return null;
+
+        String softTarget = guidanceTargetSelector.select(
+                state.missingElements(), null,
+                new ArrayList<>(jsonUtils.toStringSet(scene.getRequiredElements())));
+        if (softTarget == null) return null;
+        return jsonUtils.toStringMap(scene.getRemainingWorries()).get(softTarget);
     }
 
     private String resolveGuidanceTarget(ProgressJudgeResult judgeResult,

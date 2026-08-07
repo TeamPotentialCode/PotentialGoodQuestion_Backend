@@ -70,12 +70,16 @@ public class CharacterResponseClient {
         StringBuilder sb = new StringBuilder();
         sb.append("장면 상황: ").append(req.sceneContext()).append("\n");
         sb.append("아이 발화: ").append(req.childUtterance()).append("\n");
-        sb.append("아이 발화 의도: ").append(req.childIntent()).append("\n");
+        sb.append("반응 방식: ").append(req.reactionKey()).append("\n");
         if (req.previousCharacterMessage() != null) {
             sb.append("직전 내 대사: ").append(req.previousCharacterMessage()).append("\n");
         }
         if ("GUIDED".equals(req.responseMode()) && req.guidanceWorry() != null) {
-            sb.append("(내가 아직 해소하지 못한 걱정: ").append(req.guidanceWorry()).append(")\n");
+            sb.append("(내가 아직 해소하지 못한 걱정 — 이번 반응의 핵심으로 드러낼 것: ")
+                    .append(req.guidanceWorry()).append(")\n");
+        } else if (req.softRemainingWorry() != null) {
+            sb.append("(내가 아직 해소하지 못한 걱정 — 자연스럽게 약하게만 드러낼 것: ")
+                    .append(req.softRemainingWorry()).append(")\n");
         }
         return sb.toString();
     }
