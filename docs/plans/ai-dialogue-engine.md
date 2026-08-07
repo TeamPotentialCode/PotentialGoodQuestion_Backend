@@ -40,6 +40,7 @@ src/main/java/com/potential/goodquestion/
 │   │   ├── PostProcessor.java              ✅ evidence 검증, 중복 제거
 │   │   ├── ProgressJudgeEngine.java        ✅ NORMAL/GUIDED/CLOSING 판정
 │   │   ├── GuidanceTargetSelector.java     ✅ 유도 대상 요소 선택
+│   │   ├── ReactionKeyResolver.java        ✅ childIntent+validity → reactionKey 매핑
 │   │   └── vo/
 │   │       ├── DetectedElement.java        ✅ {type, evidence} record
 │   │       ├── SessionState.java           ✅ 진행 판단 입력 VO
@@ -61,13 +62,14 @@ src/main/java/com/potential/goodquestion/
 │   │   ├── ResponseMode.java               ✅ NORMAL, GUIDED, CLOSING
 │   │   ├── ClosingReason.java              ✅ GOAL_MET, MAX_TURNS
 │   │   ├── UtteranceValidity.java          ✅ VALID, SHORT, UNCLEAR, OFF_TOPIC, PLAYFUL
-│   │   └── ThinkingElement.java            ✅ 8종 사고 요소
+│   │   ├── ThinkingElement.java            ✅ 8종 사고 요소
+│   │   └── ReactionKey.java                ✅ 7종 반응 키 + isSoftCueSkip()
 │   └── util/
 │       └── JsonUtils.java                  ✅ JSON 파싱 공통 유틸
 ├── domain/
 │   ├── scene/
 │   │   ├── entity/StoryScene.java          ✅ has_mission 필드 포함
-│   │   └── repository/StorySceneRepository.java ✅
+│   │   └── repository/StorySceneRepository.java ✅ @Cacheable("scenes") 적용
 │   ├── story/
 │   │   └── entity/Story.java               ✅ summary, difficulty, topics, status, post_activity_config 추가
 │   ├── storysession/
@@ -99,7 +101,8 @@ src/main/java/com/potential/goodquestion/
 src/test/java/com/potential/goodquestion/
 ├── engine/
 │   ├── PostProcessorTest.java
-│   └── ProgressJudgeEngineTest.java
+│   ├── ProgressJudgeEngineTest.java
+│   └── ReactionKeyResolverTest.java        ✅ 21개 케이스
 ├── utterance/
 │   └── UtteranceServiceTest.java
 └── speech/
