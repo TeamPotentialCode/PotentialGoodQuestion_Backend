@@ -66,6 +66,12 @@ public class AnalysisLlmClient {
     }
 
     private String buildUserPrompt(AnalysisRequest req) {
+        String criteriaJson;
+        try {
+            criteriaJson = objectMapper.writeValueAsString(req.elementCriteria());
+        } catch (Exception e) {
+            criteriaJson = req.elementCriteria().toString();
+        }
         return String.format("""
                 장면 상황: %s
                 학습 목표: %s
@@ -79,7 +85,7 @@ public class AnalysisLlmClient {
                 req.previousCharacterMessage() != null ? req.previousCharacterMessage() : "없음",
                 req.childUtterance(),
                 req.targetElements(),
-                req.elementCriteria()
+                criteriaJson
         );
     }
 }

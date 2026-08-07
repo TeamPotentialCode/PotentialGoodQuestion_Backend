@@ -5,10 +5,10 @@ import com.potential.goodquestion.common.code.SessionErrorCode;
 import com.potential.goodquestion.common.engine.GuidanceTargetSelector;
 import com.potential.goodquestion.common.engine.PostProcessor;
 import com.potential.goodquestion.common.engine.ProgressJudgeEngine;
+import com.potential.goodquestion.common.engine.ReactionKeyResolver;
 import com.potential.goodquestion.common.engine.vo.DetectedElement;
 import com.potential.goodquestion.common.engine.vo.ProgressJudgeResult;
 import com.potential.goodquestion.common.engine.vo.SessionState;
-import com.potential.goodquestion.common.engine.ReactionKeyResolver;
 import com.potential.goodquestion.common.enums.ClosingReason;
 import com.potential.goodquestion.common.enums.ReactionKey;
 import com.potential.goodquestion.common.enums.ResponseMode;
@@ -64,6 +64,11 @@ public class UtteranceService {
         StoryScene scene = sceneRepository.findById(request.sceneId())
                 .orElseThrow(() -> new CustomException(SessionErrorCode.SESSION_NOT_FOUND));
 
+        // 장면 JSON 필드 — 요청당 1회만 파싱
+        Set<String> requiredElements = jsonUtils.toStringSet(scene.getRequiredElements());
+        Map<String, String> elementCriteria = jsonUtils.toStringMap(scene.getElementCriteria());
+        Map<String, String> remainingWorries = jsonUtils.toStringMap(scene.getRemainingWorries());
+
         String childName = session.getChild().getName();
         String prevCharacterMsg = messageRepository
                 .findTopBySessionIdAndSceneIdAndSpeakerTypeOrderByCreatedAtDesc(
@@ -75,7 +80,8 @@ public class UtteranceService {
         Message childMessage = messageRepository.save(
                 Message.ofChild(session, scene, sanitizedText, request.sttRawText()));
 
-        AnalysisResponse rawAnalysis = callAnalysisLlm(scene, prevCharacterMsg, sanitizedText);
+        AnalysisResponse rawAnalysis = callAnalysisLlm(
+                scene, prevCharacterMsg, sanitizedText, requiredElements, elementCriteria);
         List<DetectedElement> processedElements = postProcessor.process(
                 rawAnalysis.detectedElements(), sanitizedText);
 
@@ -95,7 +101,7 @@ public class UtteranceService {
                 scene.getPreferredTurns(),
                 scene.getMaxTurns(),
                 accumulated,
-                jsonUtils.toStringSet(scene.getRequiredElements()),
+                requiredElements,
                 newlyDetected,
                 session.getLastResponseMode(),
                 newNoProgressCount,
@@ -103,11 +109,12 @@ public class UtteranceService {
         );
         ProgressJudgeResult judgeResult = progressJudgeEngine.judge(state);
 
-        String guidanceTarget = resolveGuidanceTarget(judgeResult, state, session, scene);
+        String guidanceTarget = resolveGuidanceTarget(judgeResult, state, session, requiredElements);
 
         ReactionKey reactionKey = reactionKeyResolver.resolve(
                 rawAnalysis.childIntent(), rawAnalysis.utteranceValidity(), processedElements);
-        String softRemainingWorry = resolveSoftRemainingWorry(judgeResult, state, reactionKey, scene);
+        String softRemainingWorry = resolveSoftRemainingWorry(
+                judgeResult, state, reactionKey, remainingWorries, requiredElements);
 
         session.updateAfterUtterance(
                 jsonUtils.toJson(new ArrayList<>(accumulated)),
@@ -134,7 +141,7 @@ public class UtteranceService {
                     Message.ofCharacter(session, scene, generateCharacterResponse(
                             scene, request.text(), rawAnalysis.childIntent(),
                             judgeResult, guidanceTarget, prevCharacterMsg,
-                            reactionKey, softRemainingWorry)));
+                            reactionKey, softRemainingWorry, remainingWorries)));
         }
 
         boolean showMission = resolveMissionDisplay(scene, state, newlyDetected);
@@ -147,7 +154,8 @@ public class UtteranceService {
     private static final int SCENE_CONTEXT_MAX_LENGTH = 300;
     private static final int UTTERANCE_MAX_LENGTH = 500;
 
-    private AnalysisResponse callAnalysisLlm(StoryScene scene, String prevCharMsg, String childUtterance) {
+    private AnalysisResponse callAnalysisLlm(StoryScene scene, String prevCharMsg,
+            String childUtterance, Set<String> requiredElements, Map<String, String> elementCriteria) {
         try {
             String sceneContext = scene.getSceneDescription() + (scene.getConflict() != null ? "\n" + scene.getConflict() : "");
             if (sceneContext.length() > SCENE_CONTEXT_MAX_LENGTH) {
@@ -158,8 +166,8 @@ public class UtteranceService {
                     scene.getSceneGoal(),
                     prevCharMsg,
                     childUtterance,
-                    new ArrayList<>(jsonUtils.toStringSet(scene.getRequiredElements())),
-                    jsonUtils.toStringMap(scene.getElementCriteria())
+                    new ArrayList<>(requiredElements),
+                    elementCriteria
             ));
         } catch (Exception e) {
             throw new CustomException(AiErrorCode.ANALYSIS_FAILED);
@@ -169,9 +177,8 @@ public class UtteranceService {
     private String generateCharacterResponse(StoryScene scene, String childUtterance,
             String childIntent, ProgressJudgeResult judgeResult,
             String guidanceTarget, String prevCharMsg,
-            ReactionKey reactionKey, String softRemainingWorry) {
+            ReactionKey reactionKey, String softRemainingWorry, Map<String, String> remainingWorries) {
         try {
-            Map<String, String> worries = jsonUtils.toStringMap(scene.getRemainingWorries());
             return characterResponseClient.generate(new CharacterRequest(
                     scene.getCharacterName(),
                     scene.getSceneDescription(),
@@ -180,7 +187,7 @@ public class UtteranceService {
                     reactionKey.name(),
                     judgeResult.mode().name(),
                     guidanceTarget,
-                    guidanceTarget != null ? worries.get(guidanceTarget) : null,
+                    guidanceTarget != null ? remainingWorries.get(guidanceTarget) : null,
                     softRemainingWorry,
                     prevCharMsg
             )).text();
@@ -189,8 +196,18 @@ public class UtteranceService {
         }
     }
 
+    private String resolveGuidanceTarget(ProgressJudgeResult judgeResult,
+            SessionState state, StorySession session, Set<String> requiredElements) {
+        if (judgeResult.mode() != ResponseMode.GUIDED) return null;
+        return guidanceTargetSelector.select(
+                state.missingElements(),
+                session.getLastGuidanceTarget(),
+                new ArrayList<>(requiredElements)
+        );
+    }
+
     private String resolveSoftRemainingWorry(ProgressJudgeResult judgeResult, SessionState state,
-            ReactionKey reactionKey, StoryScene scene) {
+            ReactionKey reactionKey, Map<String, String> remainingWorries, Set<String> requiredElements) {
         if (judgeResult.mode() != ResponseMode.NORMAL) return null;
         if (state.newlyDetectedElements().isEmpty()) return null;
         if (state.missingElements().isEmpty()) return null;
@@ -198,23 +215,12 @@ public class UtteranceService {
 
         String softTarget = guidanceTargetSelector.select(
                 state.missingElements(), null,
-                new ArrayList<>(jsonUtils.toStringSet(scene.getRequiredElements())));
+                new ArrayList<>(requiredElements));
         if (softTarget == null) return null;
-        return jsonUtils.toStringMap(scene.getRemainingWorries()).get(softTarget);
-    }
-
-    private String resolveGuidanceTarget(ProgressJudgeResult judgeResult,
-            SessionState state, StorySession session, StoryScene scene) {
-        if (judgeResult.mode() != ResponseMode.GUIDED) return null;
-        return guidanceTargetSelector.select(
-                state.missingElements(),
-                session.getLastGuidanceTarget(),
-                new ArrayList<>(jsonUtils.toStringSet(scene.getRequiredElements()))
-        );
+        return remainingWorries.get(softTarget);
     }
 
     private Long advanceOrComplete(StorySession session, StoryScene currentScene) {
-        // 다음 대화 장면 탐색 (character_name이 있는 장면)
         return sceneRepository.findByStoryIdOrderBySceneOrder(currentScene.getStory().getId())
                 .stream()
                 .filter(s -> s.getSceneOrder() > currentScene.getSceneOrder())
@@ -226,11 +232,9 @@ public class UtteranceService {
 
     private boolean resolveMissionDisplay(StoryScene scene, SessionState state, Set<String> newlyDetected) {
         if (!scene.isHasMission() || judgeResult_isClosing(state)) return false;
-        // 미션2 (대화4): 첫 발화 이후 노출
         if (state.accumulatedElements().contains("EMOTION") || state.accumulatedElements().contains("PERSPECTIVE")) {
             return true;
         }
-        // 미션1 (대화3): SOLUTION 탐지됐거나 2턴 이상 경과 후에도 SOLUTION 없을 때
         return newlyDetected.contains("SOLUTION")
                 || (state.turnCount() >= 2 && !state.accumulatedElements().contains("SOLUTION"));
     }
@@ -242,11 +246,8 @@ public class UtteranceService {
 
     private String sanitize(String text) {
         if (text == null) return "";
-        // 앞뒤 공백 제거 + 연속 공백 단일화
         String cleaned = text.strip().replaceAll("\\s+", " ");
-        // 제어문자 제거 (탭, 개행 등 제외한 비표시 문자)
         cleaned = cleaned.replaceAll("[\\p{Cntrl}&&[^\t\n\r]]", "");
-        // 최대 길이 제한
         if (cleaned.length() > UTTERANCE_MAX_LENGTH) {
             cleaned = cleaned.substring(0, UTTERANCE_MAX_LENGTH);
         }
