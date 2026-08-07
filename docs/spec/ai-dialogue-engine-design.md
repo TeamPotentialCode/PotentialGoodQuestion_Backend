@@ -25,13 +25,13 @@ POST /api/sessions/:id/utterances
         │
         ├─ 1. request.sceneId로 장면 직접 조회 (story_scenes)
         ├─ 2. 아이 메시지 저장 (messages)
-        ├─ 3. 발화 분석 LLM 호출 (gpt-4o-mini)
+        ├─ 3. 발화 분석 LLM 호출 (gpt-5-mini)
         ├─ 4. 서버 후처리 (evidence 검증, 중복 제거)
         ├─ 5. 분석 결과 저장 (utterance_analyses)
         ├─ 6. 누적 요소 갱신 + 진행 모드 판정 (서버 규칙)
         ├─ 7. 미션 노출 여부 판단 (showMission)
         ├─ 8a. CLOSING → 고정 마지막 대사, 다음 대화 장면으로 이동
-        └─ 8b. NORMAL/GUIDED → 캐릭터 대사 생성 LLM 호출 (gpt-4o-mini)
+        └─ 8b. NORMAL/GUIDED → 캐릭터 대사 생성 LLM 호출 (gpt-5-mini)
 ```
 
 **LLM 호출 횟수:** 일반 턴 2회, CLOSING 턴 1회 (토큰 절감)
@@ -458,7 +458,7 @@ Authorization: Bearer {token}
 
 - `character_opening`, `character_closing`, `scene_description` 고정 콘텐츠 (수정 불가)
 - `character_opening`, `character_closing`의 `ㅇㅇ`는 아이 이름으로 자동 치환
-- LLM 모델: `gpt-4o-mini` (분석·캐릭터 대사 동일)
+- LLM 모델: `gpt-5-mini` (분석·캐릭터 대사 동일)
 - CLOSING 턴에서 캐릭터 대사 LLM 미호출 → 토큰 절감
 - STT 원본 음성 파일 서버 저장 안 함
 - `missing_elements` DB 미저장, 응답 시 서버 계산
