@@ -1,5 +1,7 @@
 package com.potential.goodquestion.common.openai;
 
+import com.potential.goodquestion.common.code.AiErrorCode;
+import com.potential.goodquestion.common.exception.CustomException;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,15 +21,19 @@ public class OpenAiTtsClient {
     private String voice;
 
     public byte[] synthesize(String text) {
-        Map<String, Object> body = Map.of(
-                "model", model,
-                "input", text,
-                "voice", voice
-        );
-        return openAiRestClient.post()
-                .uri("/audio/speech")
-                .body(body)
-                .retrieve()
-                .body(byte[].class);
+        try {
+            Map<String, Object> body = Map.of(
+                    "model", model,
+                    "input", text,
+                    "voice", voice
+            );
+            return openAiRestClient.post()
+                    .uri("/audio/speech")
+                    .body(body)
+                    .retrieve()
+                    .body(byte[].class);
+        } catch (Exception e) {
+            throw new CustomException(AiErrorCode.TTS_FAILED);
+        }
     }
 }

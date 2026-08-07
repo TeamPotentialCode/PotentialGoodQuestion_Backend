@@ -2,6 +2,8 @@ package com.potential.goodquestion.common.openai;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
+import com.potential.goodquestion.common.code.AiErrorCode;
+import com.potential.goodquestion.common.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -42,7 +44,7 @@ public class WhisperClient {
                     .get("text")
                     .asText();
         } catch (IOException e) {
-            throw new RuntimeException("STT 변환 실패", e);
+            throw new CustomException(AiErrorCode.STT_FAILED);
         }
     }
 }
