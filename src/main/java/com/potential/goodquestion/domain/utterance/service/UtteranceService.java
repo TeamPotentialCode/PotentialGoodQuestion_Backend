@@ -59,6 +59,7 @@ public class UtteranceService {
                 .orElseThrow(() -> new CustomException(SessionErrorCode.SESSION_NOT_FOUND));
         StoryScene scene = session.getCurrentScene();
 
+        String childName = session.getChild().getName();
         String prevCharacterMsg = messageRepository
                 .findTopBySessionIdAndSceneIdAndSpeakerTypeOrderByCreatedAtDesc(
                         sessionId, scene.getId(), SpeakerType.CHARACTER)
@@ -121,7 +122,7 @@ public class UtteranceService {
 
         if (judgeResult.isClosing()) {
             characterMessage = messageRepository.save(
-                    Message.ofCharacter(session, scene, scene.getCharacterClosing()));
+                    Message.ofCharacter(session, scene, replaceName(scene.getCharacterClosing(), childName)));
             sceneCompleted = true;
             nextSceneId = advanceOrComplete(session, scene);
         } else {
@@ -186,6 +187,11 @@ public class UtteranceService {
                 .findByStoryIdAndSceneOrder(scene.getStory().getId(), scene.getSceneOrder() + 1)
                 .map(next -> { session.advanceScene(next); return next.getId(); })
                 .orElseGet(() -> { session.complete(); return null; });
+    }
+
+    private String replaceName(String text, String childName) {
+        if (text == null) return null;
+        return text.replace("ㅇㅇ", childName);
     }
 
     private boolean isLowInformation(String validity) {
