@@ -232,11 +232,14 @@ public class UtteranceService {
 
     private boolean resolveMissionDisplay(StoryScene scene, SessionState state, Set<String> newlyDetected) {
         if (!scene.isHasMission() || judgeResult_isClosing(state)) return false;
-        if (state.accumulatedElements().contains("EMOTION") || state.accumulatedElements().contains("PERSPECTIVE")) {
-            return true;
+        if (state.requiredElements().contains("SOLUTION")) {
+            // 미션1: SOLUTION 탐지됐거나 2턴 이상 경과 후에도 SOLUTION 없을 때
+            return newlyDetected.contains("SOLUTION")
+                    || (state.turnCount() >= 2 && !state.accumulatedElements().contains("SOLUTION"));
         }
-        return newlyDetected.contains("SOLUTION")
-                || (state.turnCount() >= 2 && !state.accumulatedElements().contains("SOLUTION"));
+        // 미션2: EMOTION 또는 PERSPECTIVE가 누적 요소에 있을 때
+        return state.accumulatedElements().contains("EMOTION")
+                || state.accumulatedElements().contains("PERSPECTIVE");
     }
 
     private boolean judgeResult_isClosing(SessionState state) {
