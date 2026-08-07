@@ -2,6 +2,11 @@ spring:
   application:
     name: goodquestion
 
+  servlet:
+    multipart:
+      max-file-size: 25MB    # Whisper API 최대 허용 크기
+      max-request-size: 26MB
+
   # ────────────────────────────────────────
   # DataSource (Railway PostgreSQL)
   # 환경변수로 주입: DB_URL, DB_USERNAME, DB_PASSWORD
