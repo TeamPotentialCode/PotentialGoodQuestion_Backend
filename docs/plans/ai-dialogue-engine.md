@@ -2,26 +2,30 @@
 
 > 담당자: 전우선
 > 작성일: 2026-08-07
+> 최종 수정: 2026-08-08
+> **상태: 구현 완료 (API 키 수령 후 통합 테스트 대기)**
 
-**Goal:** POST /sessions/:id/utterances 핵심 파이프라인(발화 저장→LLM 분석→후처리→진행 판단→캐릭터 대사 생성)과 STT/TTS, 보호자 리포트 API를 구현한다.
+**Goal:** POST /api/sessions/:id/utterances 핵심 파이프라인(발화 저장→LLM 분석→후처리→진행 판단→캐릭터 대사 생성)과 STT/TTS, 보호자 리포트 API를 구현한다.
 
 **Architecture:** 발화 분석·진행 판단·캐릭터 응답을 독립 모듈로 분리한다. 진행 판단 엔진은 LLM 없이 순수 규칙으로 동작하여 토큰 비용을 최소화한다. LLM 호출은 AnalysisLlmClient(분석)와 CharacterResponseClient(대사 생성) 두 클라이언트로 격리하고, 나머지 로직은 서버 코드로 처리한다.
 
-**Tech Stack:** Spring Boot 4.1.0 · Java 17 · JPA(Hibernate) · PostgreSQL(Railway) · OpenAI API(gpt-5-mini, Whisper, TTS-1) · Spring RestClient · Jackson · JUnit 5 · Mockito · Lombok
+**Tech Stack:** Spring Boot 4.1.0 · Java 17 · JPA(Hibernate) · PostgreSQL(Railway) · OpenAI API(gpt-4o-mini, Whisper-1, TTS-1) · Spring RestClient · Jackson · JUnit 5 · Mockito · Lombok
 
 ## Global Constraints
 
-- 모델: `gpt-5-mini` (분석 + 캐릭터 대사 모두 동일 모델)
+- 모델: `gpt-4o-mini` (분석 + 캐릭터 대사 모두 동일)
 - 1세션(8턴) 기준 토큰 약 1.5만~2만. 토큰 절감 우선.
-- `scene_description`, `character_opening`, `character_closing` 는 수정 불가 고정 콘텐츠.
-- `missing_elements` 는 DB 저장 안 함. 서버에서 매 요청마다 계산.
-- `evidence` 는 반드시 아이 발화 원문에 존재하는 부분 문자열이어야 함.
+- `scene_description`, `character_opening`, `character_closing` 수정 불가 고정 콘텐츠.
+- `character_opening`, `character_closing`의 `ㅇㅇ`는 아이 이름으로 자동 치환.
+- `missing_elements` DB 저장 안 함. 서버에서 매 요청마다 계산.
+- `evidence` 반드시 아이 발화 원문의 부분 문자열이어야 함.
 - CLOSING 턴에서는 LLM 호출 없이 `character_closing` 고정 대사 사용.
-- 담당 API: `POST /sessions/:id/utterances`, `POST /speech/stt`, `POST /speech/tts`, `GET /reports/:sessionId`
-- 다른 팀원 담당 API(세션 생성, 이야기 조회, 후속 활동)는 인터페이스만 소비. 직접 구현 금지.
+- 장면 이동: 내러레이션 장면 건너뛰고 다음 대화 장면(character_name != null)으로 직행.
+- 담당 API: `POST /api/sessions/:id/utterances`, `POST /api/speech/stt`, `POST /api/speech/tts`, `GET /api/reports/:sessionId`
+- 다른 팀원 담당 API는 인터페이스만 소비. 직접 구현 금지.
 - 패키지 루트: `com.potential.goodquestion`
-- ⚠️ StorySession 패키지: `domain/storysession/` (기존 플랜의 `domain/session/` 아님 — 김현정 구현 반영)
-- ⚠️ StoryScene 엔티티 생성 후 StorySession.java의 `currentSceneId (Long)` → `@ManyToOne StoryScene currentScene` 으로 교체 필요
+- StorySession 패키지: `domain/storysession/` ✅ 완료
+- StorySession.currentScene: `@ManyToOne StoryScene` ✅ 완료
 
 ---
 
@@ -30,60 +34,67 @@
 ```
 src/main/java/com/potential/goodquestion/
 ├── common/
+│   ├── code/
+│   │   └── AiErrorCode.java                ✅ AI_001~AI_004 에러 코드
 │   ├── engine/
-│   │   ├── PostProcessor.java              (신규) 서버 후처리 순수 로직
-│   │   ├── ProgressJudgeEngine.java        (신규) NORMAL/GUIDED/CLOSING 판정
-│   │   ├── GuidanceTargetSelector.java     (신규) 유도 대상 요소 선택
+│   │   ├── PostProcessor.java              ✅ evidence 검증, 중복 제거
+│   │   ├── ProgressJudgeEngine.java        ✅ NORMAL/GUIDED/CLOSING 판정
+│   │   ├── GuidanceTargetSelector.java     ✅ 유도 대상 요소 선택
 │   │   └── vo/
-│   │       ├── SessionState.java           (신규) 진행 판단 입력 VO
-│   │       └── ProgressJudgeResult.java    (신규) 진행 판단 출력 VO
+│   │       ├── DetectedElement.java        ✅ {type, evidence} record
+│   │       ├── SessionState.java           ✅ 진행 판단 입력 VO
+│   │       └── ProgressJudgeResult.java    ✅ 진행 판단 출력 VO
 │   ├── config/
-│   │   └── OpenAiConfig.java               (신규) OpenAI RestClient 빈
-│   └── openai/
-│       ├── AnalysisLlmClient.java          (신규) 발화 분석 LLM 호출
-│       ├── CharacterResponseClient.java    (신규) 캐릭터 대사 생성 LLM 호출
-│       ├── WhisperClient.java              (신규) STT Whisper API
-│       ├── OpenAiTtsClient.java            (신규) TTS API
-│       └── dto/
-│           ├── AnalysisRequest.java        (신규)
-│           ├── AnalysisResponse.java       (신규)
-│           ├── CharacterRequest.java       (신규)
-│           └── CharacterResponse.java      (신규)
+│   │   └── OpenAiConfig.java               ✅ OpenAI RestClient 빈
+│   ├── openai/
+│   │   ├── AnalysisLlmClient.java          ✅ 발화 분석 LLM + 이야기 STT 힌트 포함
+│   │   ├── CharacterResponseClient.java    ✅ 캐릭터 대사 생성 LLM
+│   │   ├── WhisperClient.java              ✅ STT + 방귀 뀌는 며느리 키워드 힌트
+│   │   ├── OpenAiTtsClient.java            ✅ TTS
+│   │   └── dto/
+│   │       ├── AnalysisRequest.java        ✅
+│   │       ├── AnalysisResponse.java       ✅
+│   │       ├── CharacterRequest.java       ✅
+│   │       └── CharacterResponse.java      ✅
+│   ├── enums/
+│   │   ├── SpeakerType.java                ✅ CHILD, CHARACTER
+│   │   ├── ResponseMode.java               ✅ NORMAL, GUIDED, CLOSING
+│   │   ├── ClosingReason.java              ✅ GOAL_MET, MAX_TURNS
+│   │   ├── UtteranceValidity.java          ✅ VALID, SHORT, UNCLEAR, OFF_TOPIC, PLAYFUL
+│   │   └── ThinkingElement.java            ✅ 8종 사고 요소
+│   └── util/
+│       └── JsonUtils.java                  ✅ JSON 파싱 공통 유틸
 ├── domain/
 │   ├── scene/
-│   │   ├── entity/StoryScene.java          (신규) story_scenes 테이블
-│   │   └── repository/StorySceneRepository.java (신규)
-│   ├── storysession/                        ⚠️ domain/session/ 아님
-│   │   ├── entity/StorySession.java        (김현정 구현 완료 — import 경로 확인)
-│   │   └── repository/StorySessionRepository.java (김현정 구현 완료)
+│   │   ├── entity/StoryScene.java          ✅ has_mission 필드 포함
+│   │   └── repository/StorySceneRepository.java ✅
+│   ├── story/
+│   │   └── entity/Story.java               ✅ summary, difficulty, topics, status, post_activity_config 추가
+│   ├── storysession/
+│   │   ├── entity/StorySession.java        ✅ currentScene(@ManyToOne) + advanceScene() 완료
+│   │   └── repository/StorySessionRepository.java ✅
 │   ├── message/
-│   │   ├── entity/Message.java             (신규) messages 테이블
-│   │   └── repository/MessageRepository.java (신규)
+│   │   ├── entity/Message.java             ✅
+│   │   └── repository/MessageRepository.java ✅
 │   ├── utterance/
-│   │   ├── entity/UtteranceAnalysis.java   (신규) utterance_analyses 테이블
-│   │   ├── repository/UtteranceAnalysisRepository.java (신규)
-│   │   ├── controller/UtteranceController.java (신규)
-│   │   ├── service/UtteranceService.java   (신규) 파이프라인 오케스트레이터
+│   │   ├── entity/UtteranceAnalysis.java   ✅
+│   │   ├── repository/UtteranceAnalysisRepository.java ✅
+│   │   ├── controller/UtteranceController.java ✅ /api/sessions/{id}/utterances
+│   │   ├── service/UtteranceService.java   ✅ showMission, ㅇㅇ→이름 치환 포함
 │   │   └── dto/
-│   │       ├── UtteranceRequest.java       (신규)
-│   │       └── UtteranceResponse.java      (신규)
+│   │       ├── UtteranceRequest.java       ✅
+│   │       └── UtteranceResponse.java      ✅ showMission 필드 포함
 │   ├── speech/
-│   │   ├── controller/SpeechController.java (신규)
-│   │   ├── service/SttService.java         (신규)
-│   │   ├── service/TtsService.java         (신규)
+│   │   ├── controller/SpeechController.java ✅ /api/speech/stt, /api/speech/tts
+│   │   ├── service/SttService.java         ✅
+│   │   ├── service/TtsService.java         ✅
 │   │   └── dto/
-│   │       ├── SttResponse.java            (신규)
-│   │       └── TtsRequest.java             (신규)
+│   │       ├── SttResponse.java            ✅
+│   │       └── TtsRequest.java             ✅
 │   └── report/
-│       ├── controller/ReportController.java (신규)
-│       ├── service/ReportService.java      (신규)
-│       └── dto/ReportResponse.java         (신규)
-└── common/enums/
-    ├── SpeakerType.java                    (신규) CHILD, CHARACTER
-    ├── ResponseMode.java                   (신규) NORMAL, GUIDED, CLOSING
-    ├── ClosingReason.java                  (신규) GOAL_MET, MAX_TURNS
-    ├── UtteranceValidity.java              (신규) VALID, SHORT, UNCLEAR, OFF_TOPIC, PLAYFUL
-    └── ThinkingElement.java               (신규) DECISION, REASON, PERSPECTIVE, SOLUTION, RESULT, EMOTION, EMPATHY, REQUEST
+│       ├── controller/ReportController.java ✅ /api/reports/{sessionId}
+│       ├── service/ReportService.java      ✅ N+1 해결, JsonUtils 적용
+│       └── dto/ReportResponse.java         ✅
 
 src/test/java/com/potential/goodquestion/
 ├── engine/
