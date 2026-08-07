@@ -22,6 +22,10 @@ public class WhisperClient {
     @Value("${openai.model.stt}")
     private String model;
 
+    // 이야기 관련 키워드 힌트 — 아이 발음이 불명확해도 Whisper 인식률 향상
+    private static final String STT_HINT =
+            "며느리, 방귀, 시아버지, 배나무, 시댁, 참다, 배가 아파요, 창피해요, 가족, 마을 사람, 배, 열매, 바람";
+
     public String transcribe(MultipartFile audioFile) {
         try {
             byte[] audioBytes = audioFile.getBytes();
@@ -34,6 +38,7 @@ public class WhisperClient {
             });
             multipart.add("model", model);
             multipart.add("language", "ko");
+            multipart.add("prompt", STT_HINT);
 
             return openAiRestClient.post()
                     .uri("/audio/transcriptions")
