@@ -57,7 +57,8 @@ public class UtteranceService {
     public UtteranceResponse processUtterance(Long sessionId, UtteranceRequest request) {
         StorySession session = sessionRepository.findByIdAndStatus(sessionId, "IN_PROGRESS")
                 .orElseThrow(() -> new CustomException(SessionErrorCode.SESSION_NOT_FOUND));
-        StoryScene scene = session.getCurrentScene();
+        StoryScene scene = sceneRepository.findById(request.sceneId())
+                .orElseThrow(() -> new CustomException(SessionErrorCode.SESSION_NOT_FOUND));
 
         String childName = session.getChild().getName();
         String prevCharacterMsg = messageRepository
@@ -182,9 +183,13 @@ public class UtteranceService {
         );
     }
 
-    private Long advanceOrComplete(StorySession session, StoryScene scene) {
-        return sceneRepository
-                .findByStoryIdAndSceneOrder(scene.getStory().getId(), scene.getSceneOrder() + 1)
+    private Long advanceOrComplete(StorySession session, StoryScene currentScene) {
+        // 다음 대화 장면 탐색 (character_name이 있는 장면)
+        return sceneRepository.findByStoryIdOrderBySceneOrder(currentScene.getStory().getId())
+                .stream()
+                .filter(s -> s.getSceneOrder() > currentScene.getSceneOrder())
+                .filter(s -> s.getCharacterName() != null)
+                .findFirst()
                 .map(next -> { session.advanceScene(next); return next.getId(); })
                 .orElseGet(() -> { session.complete(); return null; });
     }
