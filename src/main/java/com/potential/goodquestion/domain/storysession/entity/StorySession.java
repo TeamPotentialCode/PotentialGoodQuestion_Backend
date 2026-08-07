@@ -161,7 +161,9 @@ public class StorySession extends BaseEntity {
         this.accumulatedElements = newAccumulatedElements;
         this.lastDetectedElements = newDetectedElements;
         this.lastResponseMode = responseMode;
-        this.lastGuidanceTarget = guidanceTarget;
+        if (guidanceTarget != null) {
+            this.lastGuidanceTarget = guidanceTarget;
+        }
         this.turnsWithoutNewElement = turnsWithoutNewElement;
         this.consecutiveLowInformationTurns = consecutiveLowInfoTurns;
         this.sceneGoalMet = goalMet;
