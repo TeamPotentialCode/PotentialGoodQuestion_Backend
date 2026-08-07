@@ -39,3 +39,6 @@ build/
 # Spring Boot
 application-local.yaml
 application-secret.yaml
+
+# 환경변수 파일 (절대 커밋 금지)
+.env

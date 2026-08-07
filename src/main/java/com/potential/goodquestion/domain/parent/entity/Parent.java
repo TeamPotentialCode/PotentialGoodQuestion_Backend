@@ -53,22 +53,40 @@ public class Parent extends BaseEntity {
     @Column(name = "provider_id", nullable = false, length = 200)
     private String providerId;
 
+    @Comment("비밀번호 (일반 로그인 전용, 소셜 로그인 시 null)")
+    @Column(name = "password", length = 200)
+    private String password;
+
     @Comment("등록된 아이 프로필 목록")
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Child> children = new ArrayList<>();
 
     @Builder
-    public Parent(String email, String name, OAuthProvider provider, String providerId) {
+    public Parent(String email, String name, OAuthProvider provider, String providerId, String password) {
         this.email = email;
         this.name = name;
         this.provider = provider;
         this.providerId = providerId;
+        this.password = password;
     }
 
     /**
-     * 보호자 계정 생성
+     * 일반 로그인 보호자 계정 생성 (이메일+비밀번호)
      */
-    public static Parent create(String email, String name, OAuthProvider provider, String providerId) {
+    public static Parent createLocal(String email, String name, String encodedPassword) {
+        return Parent.builder()
+                .email(email)
+                .name(name)
+                .provider(OAuthProvider.LOCAL)
+                .providerId(email)   // LOCAL은 providerId를 email로 사용
+                .password(encodedPassword)
+                .build();
+    }
+
+    /**
+     * 소셜 로그인 보호자 계정 생성
+     */
+    public static Parent createOAuth(String email, String name, OAuthProvider provider, String providerId) {
         return Parent.builder()
                 .email(email)
                 .name(name)
