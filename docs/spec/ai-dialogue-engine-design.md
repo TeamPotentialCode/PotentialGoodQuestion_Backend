@@ -20,7 +20,7 @@
 ### 아키텍처 개요
 
 ```
-POST /sessions/:id/utterances
+POST /api/sessions/:id/utterances
         │
         ├─ 1. 아이 메시지 저장 (messages)
         ├─ 2. 발화 분석 LLM 호출 (gpt-5-mini)
@@ -141,14 +141,14 @@ POST /sessions/:id/utterances
 
 ---
 
-## 4. POST /sessions/:id/utterances
+## 4. POST /api/sessions/:id/utterances
 
 아이의 발화를 제출하면 분석 → 진행 판단 → 캐릭터 반응까지 처리하고 결과를 반환합니다.
 
 ### Request
 
 ```
-POST /sessions/{sessionId}/utterances
+POST /api/sessions/{sessionId}/utterances
 Authorization: Bearer {token}
 Content-Type: application/json
 ```
@@ -248,14 +248,14 @@ Content-Type: application/json
 
 ---
 
-## 5. POST /speech/stt
+## 5. POST /api/speech/stt
 
 음성 파일을 텍스트로 변환합니다. OpenAI Whisper 사용.
 
 ### Request
 
 ```
-POST /speech/stt
+POST /api/speech/stt
 Authorization: Bearer {token}
 Content-Type: multipart/form-data
 ```
@@ -285,14 +285,14 @@ Content-Type: multipart/form-data
 
 ---
 
-## 6. POST /speech/tts
+## 6. POST /api/speech/tts
 
 텍스트를 음성 파일로 변환합니다. OpenAI TTS 사용. 캐릭터 대사 재생에 사용합니다.
 
 ### Request
 
 ```
-POST /speech/tts
+POST /api/speech/tts
 Authorization: Bearer {token}
 Content-Type: application/json
 ```
@@ -317,14 +317,14 @@ Body: [audio binary]
 
 ---
 
-## 7. GET /reports/:sessionId
+## 7. GET /api/reports/:sessionId
 
 세션 완료 후 보호자 리포트를 반환합니다.
 
 ### Request
 
 ```
-GET /reports/{sessionId}
+GET /api/reports/{sessionId}
 Authorization: Bearer {token}
 ```
 
@@ -420,18 +420,18 @@ Authorization: Bearer {token}
 
 ```
 1. 장면 진입
-   → POST /speech/tts (character_opening 텍스트)
+   → POST /api/speech/tts (character_opening 텍스트)
    → 음성 자동 재생
 
 2. 아이 발화
    → 마이크 활성화
-   → 녹음 완료 시 POST /speech/stt
+   → 녹음 완료 시 POST /api/speech/stt
    → text 화면 표시 (아이 확인)
-   → 보내기 버튼 → POST /sessions/:id/utterances
+   → 보내기 버튼 → POST /api/sessions/:id/utterances
 
 3. 캐릭터 반응
    → 응답의 characterMessage.text 표시
-   → POST /speech/tts (characterMessage.text)
+   → POST /api/speech/tts (characterMessage.text)
    → 음성 재생
 
 4. 반복 또는 전환
@@ -444,7 +444,7 @@ Authorization: Bearer {token}
 
 ```
 세션 완료 후 보호자 계정으로 전환
-→ GET /reports/{sessionId}
+→ GET /api/reports/{sessionId}
 → 말하기 역량 분석 탭: elementSummary (logic / empathy / perspective)
 → 대표 발화 탭: representativeUtterances
 → 가정 학습 가이드 탭: learningGuide
