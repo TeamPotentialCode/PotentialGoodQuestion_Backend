@@ -84,3 +84,16 @@ cors:
 # ────────────────────────────────────────
 server:
   port: ${PORT:8080}
+
+# ────────────────────────────────────────
+# OpenAI
+# ────────────────────────────────────────
+openai:
+  api-key: ${OPENAI_API_KEY}
+  base-url: https://api.openai.com/v1
+  model:
+    analysis: gpt-4o-mini
+    character: gpt-4o-mini
+    stt: whisper-1
+    tts: tts-1
+    tts-voice: nova

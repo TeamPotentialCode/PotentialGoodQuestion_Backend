@@ -20,6 +20,8 @@
 - 담당 API: `POST /sessions/:id/utterances`, `POST /speech/stt`, `POST /speech/tts`, `GET /reports/:sessionId`
 - 다른 팀원 담당 API(세션 생성, 이야기 조회, 후속 활동)는 인터페이스만 소비. 직접 구현 금지.
 - 패키지 루트: `com.potential.goodquestion`
+- ⚠️ StorySession 패키지: `domain/storysession/` (기존 플랜의 `domain/session/` 아님 — 김현정 구현 반영)
+- ⚠️ StoryScene 엔티티 생성 후 StorySession.java의 `currentSceneId (Long)` → `@ManyToOne StoryScene currentScene` 으로 교체 필요
 
 ---
 
@@ -51,9 +53,9 @@ src/main/java/com/potential/goodquestion/
 │   ├── scene/
 │   │   ├── entity/StoryScene.java          (신규) story_scenes 테이블
 │   │   └── repository/StorySceneRepository.java (신규)
-│   ├── session/
-│   │   ├── entity/StorySession.java        (기존 Session.java 전면 재작성)
-│   │   └── repository/StorySessionRepository.java (기존 재작성)
+│   ├── storysession/                        ⚠️ domain/session/ 아님
+│   │   ├── entity/StorySession.java        (김현정 구현 완료 — import 경로 확인)
+│   │   └── repository/StorySessionRepository.java (김현정 구현 완료)
 │   ├── message/
 │   │   ├── entity/Message.java             (신규) messages 테이블
 │   │   └── repository/MessageRepository.java (신규)
@@ -200,9 +202,12 @@ public interface StorySceneRepository extends JpaRepository<StoryScene, Long> {
 }
 ```
 
-- [ ] **Step 3: StorySession 엔티티 생성 (기존 Session.java 대체)**
+- [ ] **Step 3: StorySession 엔티티 수정 (김현정 구현 완료 — 전우선은 currentScene 필드 교체만 담당)**
 
-> ⚠️ 김현정 담당 영역과 공유 엔티티. 병합 전 조율 필요. 기존 Session.java는 삭제하거나 이름 변경.
+> ⚠️ `domain/storysession/entity/StorySession.java` 경로. 김현정이 기본 구현 완료.
+> 전우선은 StoryScene 엔티티 생성 후 아래 두 가지만 교체:
+> - `currentSceneId (Long)` → `@ManyToOne StoryScene currentScene`
+> - `advanceToNextScene(Long nextSceneId)` → `advanceScene(StoryScene nextScene)`
 
 ```java
 // domain/session/entity/StorySession.java

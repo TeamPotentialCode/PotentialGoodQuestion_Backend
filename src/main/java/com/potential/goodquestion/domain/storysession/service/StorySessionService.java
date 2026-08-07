@@ -5,6 +5,8 @@ import com.potential.goodquestion.common.code.SessionErrorCode;
 import com.potential.goodquestion.common.exception.CustomException;
 import com.potential.goodquestion.domain.child.entity.Child;
 import com.potential.goodquestion.domain.child.repository.ChildRepository;
+import com.potential.goodquestion.domain.scene.entity.StoryScene;
+import com.potential.goodquestion.domain.scene.repository.StorySceneRepository;
 import com.potential.goodquestion.domain.storysession.dto.StorySessionRequestDto;
 import com.potential.goodquestion.domain.storysession.dto.StorySessionResponseDto;
 import com.potential.goodquestion.domain.storysession.entity.StorySession;
@@ -34,6 +36,7 @@ public class StorySessionService {
     private final StorySessionRepository storySessionRepository;
     private final StoryRepository storyRepository;
     private final ChildRepository childRepository;
+    private final StorySceneRepository storySceneRepository;
 
     /**
      * 새 학습 세션 생성
@@ -58,7 +61,9 @@ public class StorySessionService {
         Child child = getChildWithOwnerCheck(parentId, request.getChildId());
 
         // 세션 생성 및 저장
-        StorySession session = StorySession.create(child, story);
+        StoryScene firstScene = storySceneRepository.findByStoryIdAndSceneOrder(story.getId(), 1)
+                .orElse(null);
+        StorySession session = StorySession.create(child, story, firstScene);
         return StorySessionResponseDto.SessionInfo.from(storySessionRepository.save(session));
     }
 

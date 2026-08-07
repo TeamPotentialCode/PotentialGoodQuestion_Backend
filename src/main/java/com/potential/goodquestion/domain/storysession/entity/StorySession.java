@@ -2,6 +2,7 @@ package com.potential.goodquestion.domain.storysession.entity;
 
 import com.potential.goodquestion.common.base.BaseEntity;
 import com.potential.goodquestion.domain.child.entity.Child;
+import com.potential.goodquestion.domain.scene.entity.StoryScene;
 import com.potential.goodquestion.domain.story.entity.Story;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -59,17 +60,10 @@ public class StorySession extends BaseEntity {
     @JoinColumn(name = "story_id", nullable = false)
     private Story story;
 
-    /**
-     * 현재 진행 중인 장면 ID
-     *   전우선 담당: StoryScene 엔티티 생성 후 @ManyToOne 관계로 교체 필요
-     *   변경 방법: 이 컬럼 삭제 후 아래로 대체
-     *   @ManyToOne(fetch = FetchType.LAZY)
-     *   @JoinColumn(name = "current_scene_id")
-     *   private StoryScene currentScene;
-     */
-    @Comment("현재 진행 중인 장면 ID (StoryScene 엔티티 생성 후 FK 관계로 교체)")
-    @Column(name = "current_scene_id")
-    private Long currentSceneId;
+    @Comment("현재 진행 중인 장면")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "current_scene_id")
+    private StoryScene currentScene;
 
     @Comment("현재 장면 아이 발화 횟수")
     @Column(name = "current_child_turn_count", nullable = false)
@@ -124,26 +118,19 @@ public class StorySession extends BaseEntity {
     private LocalDateTime lastActivityAt;
 
     @Builder
-    public StorySession(Child child, Story story, Long currentSceneId) {
+    public StorySession(Child child, Story story, StoryScene currentScene) {
         this.child = child;
         this.story = story;
-        this.currentSceneId = currentSceneId;
+        this.currentScene = currentScene;
         this.startedAt = LocalDateTime.now();
         this.lastActivityAt = LocalDateTime.now();
     }
 
-    /**
-     * 새 세션 생성 팩토리 메서드
-     *
-     * @param child 학습 아이
-     * @param story 이야기 콘텐츠
-     * @return IN_PROGRESS 상태의 새 세션
-     */
-    public static StorySession create(Child child, Story story) {
+    public static StorySession create(Child child, Story story, StoryScene firstScene) {
         return StorySession.builder()
                 .child(child)
                 .story(story)
-                .currentSceneId(null) // ⚠️ 전우선 담당: StoryScene 첫 번째 장면으로 초기화 필요
+                .currentScene(firstScene)
                 .build();
     }
 
@@ -182,14 +169,8 @@ public class StorySession extends BaseEntity {
         this.lastActivityAt = LocalDateTime.now();
     }
 
-    /**
-     * 다음 장면으로 이동 (장면 상태 초기화)
-     * ⚠️ 전우선 담당: StoryScene 엔티티 생성 후 파라미터 타입을 StoryScene으로 교체 필요
-     *
-     * @param nextSceneId 다음 장면 ID
-     */
-    public void advanceToNextScene(Long nextSceneId) {
-        this.currentSceneId = nextSceneId;
+    public void advanceScene(StoryScene nextScene) {
+        this.currentScene = nextScene;
         this.currentChildTurnCount = 0;
         this.accumulatedElements = "[]";
         this.lastDetectedElements = "[]";

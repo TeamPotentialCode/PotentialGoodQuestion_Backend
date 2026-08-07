@@ -63,7 +63,7 @@ public class StorySessionResponseDto {
                     .childId(session.getChild().getId())
                     .childName(session.getChild().getName())
                     .status(session.getStatus())
-                    .currentSceneId(session.getCurrentSceneId())
+                    .currentSceneId(session.getCurrentScene() != null ? session.getCurrentScene().getId() : null)
                     .currentChildTurnCount(session.getCurrentChildTurnCount())
                     .startedAt(session.getStartedAt())
                     .completedAt(session.getCompletedAt())
