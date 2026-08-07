@@ -73,6 +73,10 @@ public class StoryScene extends BaseEntity {
     @Column(name = "remaining_worries", columnDefinition = "TEXT")
     private String remainingWorries;
 
+    @Comment("미션 포함 여부")
+    @Column(name = "has_mission", nullable = false)
+    private boolean hasMission = false;
+
     @Comment("권장 최소 턴 수")
     @Column(name = "preferred_turns", nullable = false)
     private Integer preferredTurns;

@@ -10,7 +10,8 @@ public record UtteranceResponse(
         ProgressResult progressResult,
         CharacterMessageResult characterMessage,
         boolean sceneCompleted,
-        Long nextSceneId
+        Long nextSceneId,
+        boolean showMission
 ) {
     public record AnalysisResult(
             String childIntent,

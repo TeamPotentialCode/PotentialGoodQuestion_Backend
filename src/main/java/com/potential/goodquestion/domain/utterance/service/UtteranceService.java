@@ -133,9 +133,11 @@ public class UtteranceService {
                             judgeResult, guidanceTarget, prevCharacterMsg)));
         }
 
+        boolean showMission = resolveMissionDisplay(scene, state, newlyDetected);
+
         return buildResponse(sessionId, scene, childMessage, rawAnalysis,
                 processedElements, judgeResult, accumulated, state,
-                characterMessage, sceneCompleted, nextSceneId);
+                characterMessage, sceneCompleted, nextSceneId, showMission);
     }
 
     private AnalysisResponse callAnalysisLlm(StoryScene scene, String prevCharMsg, String childUtterance) {
@@ -194,6 +196,22 @@ public class UtteranceService {
                 .orElseGet(() -> { session.complete(); return null; });
     }
 
+    private boolean resolveMissionDisplay(StoryScene scene, SessionState state, Set<String> newlyDetected) {
+        if (!scene.isHasMission() || judgeResult_isClosing(state)) return false;
+        // 미션2 (대화4): 첫 발화 이후 노출
+        if (state.accumulatedElements().contains("EMOTION") || state.accumulatedElements().contains("PERSPECTIVE")) {
+            return true;
+        }
+        // 미션1 (대화3): SOLUTION 탐지됐거나 2턴 이상 경과 후에도 SOLUTION 없을 때
+        return newlyDetected.contains("SOLUTION")
+                || (state.turnCount() >= 2 && !state.accumulatedElements().contains("SOLUTION"));
+    }
+
+    private boolean judgeResult_isClosing(SessionState state) {
+        return state.missingElements().isEmpty() && state.turnCount() >= state.preferredTurns()
+                || state.turnCount() >= state.maxTurns();
+    }
+
     private String replaceName(String text, String childName) {
         if (text == null) return null;
         return text.replace("ㅇㅇ", childName);
@@ -208,7 +226,7 @@ public class UtteranceService {
             AnalysisResponse rawAnalysis, List<DetectedElement> processedElements,
             ProgressJudgeResult judgeResult, Set<String> accumulated,
             SessionState state, Message characterMessage,
-            boolean sceneCompleted, Long nextSceneId) {
+            boolean sceneCompleted, Long nextSceneId, boolean showMission) {
         return new UtteranceResponse(
                 sessionId, scene.getId(), childMessage.getId(),
                 new UtteranceResponse.AnalysisResult(
@@ -228,7 +246,7 @@ public class UtteranceService {
                         characterMessage.getText(),
                         sceneCompleted
                 ),
-                sceneCompleted, nextSceneId
+                sceneCompleted, nextSceneId, showMission
         );
     }
 }
