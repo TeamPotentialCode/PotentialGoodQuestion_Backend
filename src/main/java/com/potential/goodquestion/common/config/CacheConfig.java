@@ -14,11 +14,11 @@ public class CacheConfig {
 
     @Bean
     public CacheManager cacheManager() {
-        CaffeineCacheManager manager = new CaffeineCacheManager("tts");
-        manager.setCaffeine(Caffeine.newBuilder()
-                .maximumSize(200)        // 최대 200개 항목
-                .expireAfterWrite(6, TimeUnit.HOURS)
-        );
+        CaffeineCacheManager manager = new CaffeineCacheManager();
+        manager.registerCustomCache("tts",
+                Caffeine.newBuilder().maximumSize(200).expireAfterWrite(6, TimeUnit.HOURS).build());
+        manager.registerCustomCache("scenes",
+                Caffeine.newBuilder().maximumSize(100).expireAfterWrite(24, TimeUnit.HOURS).build());
         return manager;
     }
 }

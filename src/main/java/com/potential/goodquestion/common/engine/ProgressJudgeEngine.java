@@ -3,14 +3,17 @@ package com.potential.goodquestion.common.engine;
 import com.potential.goodquestion.common.engine.vo.ProgressJudgeResult;
 import com.potential.goodquestion.common.engine.vo.SessionState;
 import com.potential.goodquestion.common.enums.ClosingReason;
+import java.util.Set;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ProgressJudgeEngine {
 
     public ProgressJudgeResult judge(SessionState state) {
+        Set<String> missing = state.missingElements();
+
         // 1. 종료 조건
-        if (state.missingElements().isEmpty() && state.turnCount() >= state.preferredTurns()) {
+        if (missing.isEmpty() && state.turnCount() >= state.preferredTurns()) {
             return ProgressJudgeResult.closing(ClosingReason.GOAL_MET);
         }
         if (state.turnCount() >= state.maxTurns()) {
@@ -21,7 +24,7 @@ public class ProgressJudgeEngine {
             return ProgressJudgeResult.normal();
         }
         // 3. 유도 필요성 판단
-        boolean needsGuidance = !state.missingElements().isEmpty() &&
+        boolean needsGuidance = !missing.isEmpty() &&
                 (state.consecutiveLowInformationTurns() >= 2
                         || state.turnsWithoutNewElement() >= 2
                         || state.remainingTurns() <= 2);

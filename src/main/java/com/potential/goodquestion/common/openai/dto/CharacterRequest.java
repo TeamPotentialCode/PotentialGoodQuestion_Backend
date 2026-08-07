@@ -5,8 +5,10 @@ public record CharacterRequest(
         String sceneContext,
         String childUtterance,
         String childIntent,
+        String reactionKey,
         String responseMode,
         String guidanceTarget,
         String guidanceWorry,
+        String softRemainingWorry,
         String previousCharacterMessage
 ) {}

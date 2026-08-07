@@ -9,11 +9,11 @@
 
 **Architecture:** 발화 분석·진행 판단·캐릭터 응답을 독립 모듈로 분리한다. 진행 판단 엔진은 LLM 없이 순수 규칙으로 동작하여 토큰 비용을 최소화한다. LLM 호출은 AnalysisLlmClient(분석)와 CharacterResponseClient(대사 생성) 두 클라이언트로 격리하고, 나머지 로직은 서버 코드로 처리한다.
 
-**Tech Stack:** Spring Boot 4.1.0 · Java 17 · JPA(Hibernate) · PostgreSQL(Railway) · OpenAI API(gpt-4o-mini, Whisper-1, TTS-1) · Spring RestClient · Jackson · JUnit 5 · Mockito · Lombok
+**Tech Stack:** Spring Boot 4.1.0 · Java 17 · JPA(Hibernate) · PostgreSQL(Railway) · OpenAI API(gpt-5-mini, Whisper-1, TTS-1) · Spring RestClient · Jackson · JUnit 5 · Mockito · Lombok
 
 ## Global Constraints
 
-- 모델: `gpt-4o-mini` (분석 + 캐릭터 대사 모두 동일)
+- 모델: `gpt-5-mini` (분석 + 캐릭터 대사 모두 동일)
 - 1세션(8턴) 기준 토큰 약 1.5만~2만. 토큰 절감 우선.
 - `scene_description`, `character_opening`, `character_closing` 수정 불가 고정 콘텐츠.
 - `character_opening`, `character_closing`의 `ㅇㅇ`는 아이 이름으로 자동 치환.
@@ -40,6 +40,7 @@ src/main/java/com/potential/goodquestion/
 │   │   ├── PostProcessor.java              ✅ evidence 검증, 중복 제거
 │   │   ├── ProgressJudgeEngine.java        ✅ NORMAL/GUIDED/CLOSING 판정
 │   │   ├── GuidanceTargetSelector.java     ✅ 유도 대상 요소 선택
+│   │   ├── ReactionKeyResolver.java        ✅ childIntent+validity → reactionKey 매핑
 │   │   └── vo/
 │   │       ├── DetectedElement.java        ✅ {type, evidence} record
 │   │       ├── SessionState.java           ✅ 진행 판단 입력 VO
@@ -61,13 +62,14 @@ src/main/java/com/potential/goodquestion/
 │   │   ├── ResponseMode.java               ✅ NORMAL, GUIDED, CLOSING
 │   │   ├── ClosingReason.java              ✅ GOAL_MET, MAX_TURNS
 │   │   ├── UtteranceValidity.java          ✅ VALID, SHORT, UNCLEAR, OFF_TOPIC, PLAYFUL
-│   │   └── ThinkingElement.java            ✅ 8종 사고 요소
+│   │   ├── ThinkingElement.java            ✅ 8종 사고 요소
+│   │   └── ReactionKey.java                ✅ 7종 반응 키 + isSoftCueSkip()
 │   └── util/
 │       └── JsonUtils.java                  ✅ JSON 파싱 공통 유틸
 ├── domain/
 │   ├── scene/
 │   │   ├── entity/StoryScene.java          ✅ has_mission 필드 포함
-│   │   └── repository/StorySceneRepository.java ✅
+│   │   └── repository/StorySceneRepository.java ✅ @Cacheable("scenes") 적용
 │   ├── story/
 │   │   └── entity/Story.java               ✅ summary, difficulty, topics, status, post_activity_config 추가
 │   ├── storysession/
@@ -99,7 +101,8 @@ src/main/java/com/potential/goodquestion/
 src/test/java/com/potential/goodquestion/
 ├── engine/
 │   ├── PostProcessorTest.java
-│   └── ProgressJudgeEngineTest.java
+│   ├── ProgressJudgeEngineTest.java
+│   └── ReactionKeyResolverTest.java        ✅ 21개 케이스
 ├── utterance/
 │   └── UtteranceServiceTest.java
 └── speech/
