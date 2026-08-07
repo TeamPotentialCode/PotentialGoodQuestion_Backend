@@ -1,7 +1,7 @@
 package com.potential.goodquestion.domain.activity.entity;
 
 import com.potential.goodquestion.common.base.BaseEntity;
-import com.potential.goodquestion.domain.session.entity.Session;
+import com.potential.goodquestion.domain.session.entity.StorySession;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -35,7 +35,7 @@ public class Activity extends BaseEntity {
     @Comment("연결된 세션")
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_id", nullable = false, unique = true)
-    private Session session;
+    private StorySession session;
 
     @Comment("장면 카드 배열 순서 (JSON 형태로 저장)")
     @Column(name = "card_order", columnDefinition = "TEXT")
@@ -50,7 +50,7 @@ public class Activity extends BaseEntity {
     private Boolean isCompleted;
 
     @Builder
-    public Activity(Session session, String cardOrder, String reconstructionText, Boolean isCompleted) {
+    public Activity(StorySession session, String cardOrder, String reconstructionText, Boolean isCompleted) {
         this.session = session;
         this.cardOrder = cardOrder;
         this.reconstructionText = reconstructionText;
@@ -60,7 +60,7 @@ public class Activity extends BaseEntity {
     /**
      * 활동 생성 (미완료 상태로 시작)
      */
-    public static Activity create(Session session) {
+    public static Activity create(StorySession session) {
         return Activity.builder()
                 .session(session)
                 .isCompleted(false)
