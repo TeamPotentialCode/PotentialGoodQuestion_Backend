@@ -22,7 +22,7 @@ public class UtteranceAnalysisAsyncSaver {
     private final JsonUtils jsonUtils;
 
     @Async("analysisExecutor")
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void save(Message childMessage, AnalysisResponse rawAnalysis,
                      List<DetectedElement> processedElements) {
         try {
