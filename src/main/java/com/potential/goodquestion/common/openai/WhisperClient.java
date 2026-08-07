@@ -24,7 +24,9 @@ public class WhisperClient {
 
     // 이야기 관련 키워드 힌트 — 아이 발음이 불명확해도 Whisper 인식률 향상
     private static final String STT_HINT =
-            "며느리, 방귀, 시아버지, 배나무, 시댁, 참다, 배가 아파요, 창피해요, 가족, 마을 사람, 배, 열매, 바람";
+            "며느리, 방귀, 시아버지, 시댁, 배나무, 배, 열매, 기왓장, 갓, 마을 사람, 친정, 장대, " +
+            "참다, 창피하다, 부끄럽다, 솔직하게, 특별한 힘, 도움이 되다, 이상하게 생각하다, " +
+            "배가 아파요, 방귀 나갑니다, 우수수 떨어졌습니다";
 
     public String transcribe(MultipartFile audioFile) {
         try {
