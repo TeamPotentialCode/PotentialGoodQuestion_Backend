@@ -74,7 +74,7 @@ public class UtteranceService {
 
         AnalysisResponse rawAnalysis = callAnalysisLlm(scene, prevCharacterMsg, sanitizedText);
         List<DetectedElement> processedElements = postProcessor.process(
-                rawAnalysis.detectedElements(), request.text());
+                rawAnalysis.detectedElements(), sanitizedText);
 
         asyncSaver.save(childMessage, rawAnalysis, processedElements);
 
@@ -234,7 +234,8 @@ public class UtteranceService {
     }
 
     private boolean isLowInformation(String validity) {
-        return "SHORT".equals(validity) || "UNCLEAR".equals(validity) || "OFF_TOPIC".equals(validity);
+        return "SHORT".equals(validity) || "UNCLEAR".equals(validity)
+                || "OFF_TOPIC".equals(validity) || "PLAYFUL".equals(validity);
     }
 
     private UtteranceResponse buildResponse(
