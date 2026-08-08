@@ -56,22 +56,28 @@ public class Message extends BaseEntity {
     @Column(name = "stt_raw_text", columnDefinition = "TEXT")
     private String sttRawText;
 
+    @Comment("세션 내 메시지 발생 순서")
+    @Column(name = "turn_order", nullable = false)
+    private int turnOrder;
+
     @Builder
     public Message(StorySession session, StoryScene scene, SpeakerType speakerType,
-                   String text, String sttRawText) {
+                   String text, String sttRawText, int turnOrder) {
         this.session = session;
         this.scene = scene;
         this.speakerType = speakerType;
         this.text = text;
         this.sttRawText = sttRawText;
+        this.turnOrder = turnOrder;
     }
 
     public static Message ofChild(StorySession session, StoryScene scene,
-                                  String text, String sttRawText) {
-        return new Message(session, scene, SpeakerType.CHILD, text, sttRawText);
+                                  String text, String sttRawText, int turnOrder) {
+        return new Message(session, scene, SpeakerType.CHILD, text, sttRawText, turnOrder);
     }
 
-    public static Message ofCharacter(StorySession session, StoryScene scene, String text) {
-        return new Message(session, scene, SpeakerType.CHARACTER, text, null);
+    public static Message ofCharacter(StorySession session, StoryScene scene,
+                                      String text, int turnOrder) {
+        return new Message(session, scene, SpeakerType.CHARACTER, text, null, turnOrder);
     }
 }
