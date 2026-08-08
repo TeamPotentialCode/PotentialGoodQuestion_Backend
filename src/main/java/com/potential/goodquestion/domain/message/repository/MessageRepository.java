@@ -15,4 +15,6 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
     List<Message> findBySessionIdAndSpeakerTypeOrderByCreatedAtAsc(
             Long sessionId, SpeakerType speakerType);
+
+    long countBySessionId(Long sessionId);
 }

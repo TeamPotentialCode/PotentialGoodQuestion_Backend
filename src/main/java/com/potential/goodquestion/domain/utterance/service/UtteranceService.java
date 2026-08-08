@@ -77,8 +77,9 @@ public class UtteranceService {
                 .orElse(null);
 
         String sanitizedText = sanitize(request.text());
+        int nextTurnOrder = (int) messageRepository.countBySessionId(sessionId) + 1;
         Message childMessage = messageRepository.save(
-                Message.ofChild(session, scene, sanitizedText, request.sttRawText()));
+                Message.ofChild(session, scene, sanitizedText, request.sttRawText(), nextTurnOrder));
 
         AnalysisResponse rawAnalysis = callAnalysisLlm(
                 scene, prevCharacterMsg, sanitizedText, requiredElements, elementCriteria);
@@ -133,7 +134,7 @@ public class UtteranceService {
 
         if (judgeResult.isClosing()) {
             characterMessage = messageRepository.save(
-                    Message.ofCharacter(session, scene, replaceName(scene.getCharacterClosing(), childName)));
+                    Message.ofCharacter(session, scene, replaceName(scene.getCharacterClosing(), childName), nextTurnOrder + 1));
             sceneCompleted = true;
             nextSceneId = advanceOrComplete(session, scene);
         } else {
@@ -141,7 +142,7 @@ public class UtteranceService {
                     Message.ofCharacter(session, scene, generateCharacterResponse(
                             scene, request.text(), rawAnalysis.childIntent(),
                             judgeResult, guidanceTarget, prevCharacterMsg,
-                            reactionKey, softRemainingWorry, remainingWorries)));
+                            reactionKey, softRemainingWorry, remainingWorries), nextTurnOrder + 1));
         }
 
         boolean showMission = resolveMissionDisplay(scene, state, newlyDetected);
