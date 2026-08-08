@@ -20,17 +20,20 @@ public class ChildResponseDto {
 
         private Long childId;
         private String name;
-        private Integer age;
+        private Integer birthYear;
+        private Integer age;          // 서버에서 계산한 연도 기준 나이
         private LocalDateTime createdAt;
 
         /**
          * Child 엔티티 → ChildInfo 변환
+         * age는 현재연도 - birthYear 로 계산
          */
         public static ChildInfo from(Child child) {
             return ChildInfo.builder()
                     .childId(child.getId())
                     .name(child.getName())
-                    .age(child.getAge())
+                    .birthYear(child.getBirthYear())
+                    .age(child.calculateAge())
                     .createdAt(child.getCreatedAt())
                     .build();
         }

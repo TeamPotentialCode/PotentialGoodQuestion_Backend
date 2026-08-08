@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,10 +20,12 @@ import org.hibernate.annotations.Comment;
 
 /**
  * 말하기 후 활동 엔티티 (이야기 재구성)
+ *
+ * 테이블명: post_activity_results
  */
 @Comment("말하기 후 활동 (이야기 재구성)")
 @Entity
-@Table(name = "activities")
+@Table(name = "post_activity_results")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Activity extends BaseEntity {
@@ -37,24 +40,30 @@ public class Activity extends BaseEntity {
     @JoinColumn(name = "session_id", nullable = false, unique = true)
     private StorySession session;
 
-    @Comment("장면 카드 배열 순서 (JSON 형태로 저장)")
-    @Column(name = "card_order", columnDefinition = "TEXT")
-    private String cardOrder;
+    @Comment("아이가 최종 제출한 카드 순서 (JSON 배열 ex. [\"card_2\",\"card_1\",\"card_3\"])")
+    @Column(name = "submitted_order", columnDefinition = "TEXT")
+    private String submittedOrder;
 
-    @Comment("전체 이야기 음성 재구성 텍스트 (STT 변환 결과)")
-    @Column(name = "reconstruction_text", columnDefinition = "TEXT")
-    private String reconstructionText;
+    @Comment("카드 배열 정답 여부")
+    @Column(name = "is_order_correct")
+    private Boolean isOrderCorrect;
 
-    @Comment("활동 완료 여부")
-    @Column(name = "is_completed", nullable = false)
-    private Boolean isCompleted;
+    @Comment("순서 배열 시도 횟수")
+    @Column(name = "attempt_count", nullable = false)
+    private int attemptCount = 0;
+
+    @Comment("핵심 단어를 사용해 아이가 다시 말한 이야기 (STT 변환 결과)")
+    @Column(name = "retelling_text", columnDefinition = "TEXT")
+    private String retellingText;
+
+    @Comment("말하기 후 활동 완료 일시")
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
 
     @Builder
-    public Activity(StorySession session, String cardOrder, String reconstructionText, Boolean isCompleted) {
+    public Activity(StorySession session) {
         this.session = session;
-        this.cardOrder = cardOrder;
-        this.reconstructionText = reconstructionText;
-        this.isCompleted = isCompleted;
+        this.attemptCount = 0;
     }
 
     /**
@@ -63,16 +72,28 @@ public class Activity extends BaseEntity {
     public static Activity create(StorySession session) {
         return Activity.builder()
                 .session(session)
-                .isCompleted(false)
                 .build();
     }
 
     /**
-     * 활동 완료 처리 (카드 순서 및 재구성 텍스트 저장)
+     * 카드 순서 제출 처리 — 시도 횟수 증가 및 정답 여부 저장
+     *
+     * @param submittedOrder  아이가 제출한 카드 순서 JSON
+     * @param isOrderCorrect  정답 여부 (서버에서 계산)
      */
-    public void complete(String cardOrder, String reconstructionText) {
-        this.cardOrder = cardOrder;
-        this.reconstructionText = reconstructionText;
-        this.isCompleted = true;
+    public void submitOrder(String submittedOrder, boolean isOrderCorrect) {
+        this.submittedOrder = submittedOrder;
+        this.isOrderCorrect = isOrderCorrect;
+        this.attemptCount++;
+    }
+
+    /**
+     * 활동 완료 처리 — 이야기 재구성 텍스트 저장 및 완료 일시 기록
+     *
+     * @param retellingText  STT 변환된 재구성 발화 텍스트
+     */
+    public void complete(String retellingText) {
+        this.retellingText = retellingText;
+        this.completedAt = LocalDateTime.now();
     }
 }

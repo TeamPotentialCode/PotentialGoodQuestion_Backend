@@ -24,10 +24,10 @@ public class ChildRequestDto {
         @Size(max = 50, message = "아이 이름은 50자 이하여야 합니다.")
         private String name;
 
-        @NotNull(message = "아이 나이는 필수입니다.")
-        @Min(value = 1, message = "나이는 1 이상이어야 합니다.")
-        @Max(value = 20, message = "나이는 20 이하여야 합니다.")
-        private Integer age;
+        @NotNull(message = "출생연도는 필수입니다.")
+        @Min(value = 2000, message = "출생연도는 2000 이상이어야 합니다.")
+        @Max(value = 2030, message = "출생연도가 올바르지 않습니다.")
+        private Integer birthYear;
     }
 
     /**
@@ -41,9 +41,9 @@ public class ChildRequestDto {
         @Size(max = 50, message = "아이 이름은 50자 이하여야 합니다.")
         private String name;
 
-        @NotNull(message = "아이 나이는 필수입니다.")
-        @Min(value = 1, message = "나이는 1 이상이어야 합니다.")
-        @Max(value = 20, message = "나이는 20 이하여야 합니다.")
-        private Integer age;
+        @NotNull(message = "출생연도는 필수입니다.")
+        @Min(value = 2000, message = "출생연도는 2000 이상이어야 합니다.")
+        @Max(value = 2030, message = "출생연도가 올바르지 않습니다.")
+        private Integer birthYear;
     }
 }

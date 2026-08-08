@@ -71,7 +71,7 @@ public class ChildService {
         }
         // ─────────────────────────────────────────────────────────────────────
 
-        Child child = Child.create(parent, request.getName(), request.getAge());
+        Child child = Child.create(parent, request.getName(), request.getBirthYear());
         return ChildResponseDto.ChildInfo.from(childRepository.save(child));
     }
 
@@ -86,7 +86,7 @@ public class ChildService {
     @Transactional
     public ChildResponseDto.ChildInfo updateChild(Long parentId, Long childId, ChildRequestDto.Update request) {
         Child child = getChildWithOwnerCheck(parentId, childId);
-        child.updateProfile(request.getName(), request.getAge());
+        child.updateProfile(request.getName(), request.getBirthYear());
         return ChildResponseDto.ChildInfo.from(child);
     }
 
