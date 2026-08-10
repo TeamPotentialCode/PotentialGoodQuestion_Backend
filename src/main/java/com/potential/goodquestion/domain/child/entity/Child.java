@@ -41,33 +41,33 @@ public class Child extends BaseEntity {
     @Column(name = "name", nullable = false, length = 50)
     private String name;
 
-    @Comment("아이 나이")
-    @Column(name = "age", nullable = false)
-    private Integer age;
+    @Comment("아이 출생연도 (연령은 현재연도 - 출생연도로 계산)")
+    @Column(name = "birth_year", nullable = false)
+    private Integer birthYear;
 
     @Builder
-    public Child(Parent parent, String name, Integer age) {
+    public Child(Parent parent, String name, Integer birthYear) {
         this.parent = parent;
         this.name = name;
-        this.age = age;
+        this.birthYear = birthYear;
     }
 
     /**
      * 아이 프로필 생성
      */
-    public static Child create(Parent parent, String name, Integer age) {
+    public static Child create(Parent parent, String name, Integer birthYear) {
         return Child.builder()
                 .parent(parent)
                 .name(name)
-                .age(age)
+                .birthYear(birthYear)
                 .build();
     }
 
     /**
-     * 아이 프로필 수정 (이름, 나이)
+     * 아이 프로필 수정 (이름, 출생연도)
      */
-    public void updateProfile(String name, Integer age) {
+    public void updateProfile(String name, Integer birthYear) {
         this.name = name;
-        this.age = age;
+        this.birthYear = birthYear;
     }
 }

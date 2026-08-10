@@ -2,6 +2,7 @@ package com.potential.goodquestion.domain.child.dto;
 
 import com.potential.goodquestion.domain.child.entity.Child;
 import java.time.LocalDateTime;
+import java.time.Year;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -20,17 +21,20 @@ public class ChildResponseDto {
 
         private Long childId;
         private String name;
+        private Integer birthYear;
         private Integer age;
         private LocalDateTime createdAt;
 
         /**
          * Child 엔티티 → ChildInfo 변환
+         * age는 저장하지 않고 현재연도 - 출생연도로 계산한다(연도 기준 연령).
          */
         public static ChildInfo from(Child child) {
             return ChildInfo.builder()
                     .childId(child.getId())
                     .name(child.getName())
-                    .age(child.getAge())
+                    .birthYear(child.getBirthYear())
+                    .age(Year.now().getValue() - child.getBirthYear())
                     .createdAt(child.getCreatedAt())
                     .build();
         }
