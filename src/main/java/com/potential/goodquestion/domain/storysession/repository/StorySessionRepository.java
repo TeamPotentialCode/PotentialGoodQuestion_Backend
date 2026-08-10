@@ -26,4 +26,9 @@ public interface StorySessionRepository extends JpaRepository<StorySession, Long
      * 중복 세션 여부 확인 시 사용 가능
      */
     Optional<StorySession> findByChildIdAndStoryIdAndStatus(Long childId, Long storyId, String status);
+
+    /**
+     * 아이의 특정 상태 세션 중 가장 최근 활동한 1건 조회 (홈 이어하기용)
+     */
+    Optional<StorySession> findFirstByChildIdAndStatusOrderByLastActivityAtDesc(Long childId, String status);
 }
