@@ -286,7 +286,8 @@ public class UtteranceService {
                 new UtteranceResponse.ProgressResult(
                         judgeResult.mode().name(),
                         new ArrayList<>(accumulated),
-                        new ArrayList<>(state.missingElements())
+                        new ArrayList<>(state.missingElements()),
+                        state.remainingTurns()
                 ),
                 new UtteranceResponse.CharacterMessageResult(
                         characterMessage.getId(),
