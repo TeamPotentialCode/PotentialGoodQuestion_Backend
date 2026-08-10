@@ -14,4 +14,9 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
      * 세션으로 활동 조회
      */
     Optional<Activity> findBySession(StorySession session);
+
+    /**
+     * 세션 ID로 활동 조회
+     */
+    Optional<Activity> findBySessionId(Long sessionId);
 }

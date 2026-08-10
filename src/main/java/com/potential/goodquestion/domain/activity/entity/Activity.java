@@ -45,15 +45,21 @@ public class Activity extends BaseEntity {
     @Column(name = "reconstruction_text", columnDefinition = "TEXT")
     private String reconstructionText;
 
+    @Comment("카드 배열 정답 여부 (서버 계산, 미제출 시 null)")
+    @Column(name = "is_order_correct")
+    private Boolean isOrderCorrect;
+
     @Comment("활동 완료 여부")
     @Column(name = "is_completed", nullable = false)
     private Boolean isCompleted;
 
     @Builder
-    public Activity(StorySession session, String cardOrder, String reconstructionText, Boolean isCompleted) {
+    public Activity(StorySession session, String cardOrder, String reconstructionText,
+                    Boolean isOrderCorrect, Boolean isCompleted) {
         this.session = session;
         this.cardOrder = cardOrder;
         this.reconstructionText = reconstructionText;
+        this.isOrderCorrect = isOrderCorrect;
         this.isCompleted = isCompleted;
     }
 
@@ -68,10 +74,11 @@ public class Activity extends BaseEntity {
     }
 
     /**
-     * 활동 완료 처리 (카드 순서 및 재구성 텍스트 저장)
+     * 활동 완료 처리 (카드 순서, 정답 여부, 재구성 텍스트 저장)
      */
-    public void complete(String cardOrder, String reconstructionText) {
+    public void complete(String cardOrder, Boolean isOrderCorrect, String reconstructionText) {
         this.cardOrder = cardOrder;
+        this.isOrderCorrect = isOrderCorrect;
         this.reconstructionText = reconstructionText;
         this.isCompleted = true;
     }
