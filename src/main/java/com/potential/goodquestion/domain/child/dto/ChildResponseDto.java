@@ -2,6 +2,7 @@ package com.potential.goodquestion.domain.child.dto;
 
 import com.potential.goodquestion.domain.child.entity.Child;
 import java.time.LocalDateTime;
+import java.time.Year;
 import lombok.Builder;
 import lombok.Getter;
 

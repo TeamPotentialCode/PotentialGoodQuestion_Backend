@@ -8,6 +8,7 @@ import com.potential.goodquestion.domain.child.entity.Child;
 import com.potential.goodquestion.domain.child.repository.ChildRepository;
 import com.potential.goodquestion.domain.parent.entity.Parent;
 import com.potential.goodquestion.domain.parent.repository.ParentRepository;
+import java.time.Year;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -91,6 +92,14 @@ public class ChildService {
     }
 
     // ─────────── private ────────────────
+
+    /**
+     * 입력받은 나이를 저장용 출생연도로 변환 (현재연도 - 나이)
+     * DB에는 출생연도만 저장하고, 조회 시 연령을 계산한다.
+     */
+    private int toBirthYear(int age) {
+        return Year.now().getValue() - age;
+    }
 
     /**
      * 보호자 조회 (없으면 예외)

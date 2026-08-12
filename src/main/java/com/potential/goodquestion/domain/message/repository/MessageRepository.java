@@ -17,4 +17,10 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
             Long sessionId, SpeakerType speakerType);
 
     long countBySessionId(Long sessionId);
+
+    /**
+     * 세션 전체 메시지를 발화 순서 오름차순으로 조회
+     * GET /api/sessions/{sessionId} 대화 내역 포함 시 사용
+     */
+    List<Message> findBySessionIdOrderByTurnOrderAsc(Long sessionId);
 }

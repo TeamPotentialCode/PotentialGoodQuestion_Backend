@@ -24,7 +24,8 @@ public record UtteranceResponse(
     public record ProgressResult(
             String mode,
             List<String> accumulatedElements,
-            List<String> missingElements
+            List<String> missingElements,
+            int remainingTurns
     ) {}
 
     public record CharacterMessageResult(

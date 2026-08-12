@@ -41,6 +41,10 @@ public class StoryScene extends BaseEntity {
     @Column(name = "scene_description", columnDefinition = "TEXT", nullable = false)
     private String sceneDescription;
 
+    @Comment("장면 배경 이미지 URL (장면 화면 표시용)")
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
     @Comment("갈등 요약")
     @Column(name = "conflict", columnDefinition = "TEXT")
     private String conflict;
