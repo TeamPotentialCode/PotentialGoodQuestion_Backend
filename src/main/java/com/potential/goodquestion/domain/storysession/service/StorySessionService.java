@@ -5,6 +5,7 @@ import com.potential.goodquestion.common.code.SessionErrorCode;
 import com.potential.goodquestion.common.exception.CustomException;
 import com.potential.goodquestion.domain.child.entity.Child;
 import com.potential.goodquestion.domain.child.repository.ChildRepository;
+import com.potential.goodquestion.domain.message.repository.MessageRepository;
 import com.potential.goodquestion.domain.scene.entity.StoryScene;
 import com.potential.goodquestion.domain.scene.repository.StorySceneRepository;
 import com.potential.goodquestion.domain.storysession.dto.StorySessionRequestDto;
@@ -13,6 +14,8 @@ import com.potential.goodquestion.domain.storysession.entity.StorySession;
 import com.potential.goodquestion.domain.storysession.repository.StorySessionRepository;
 import com.potential.goodquestion.domain.story.entity.Story;
 import com.potential.goodquestion.domain.story.repository.StoryRepository;
+import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,17 +40,18 @@ public class StorySessionService {
     private final StoryRepository storyRepository;
     private final ChildRepository childRepository;
     private final StorySceneRepository storySceneRepository;
+    private final MessageRepository messageRepository;
 
     /**
      * 새 학습 세션 생성
      *
-     * 이미 IN_PROGRESS 상태의 세션이 있어도 새로 생성
-     * (기획상 한 이야기를 여러 번 시작 가능)
+     * 동일 아이 + 동일 이야기의 IN_PROGRESS 세션이 이미 있으면 해당 세션을 반환
+     * 없을 경우에만 새 세션을 생성
      *
      * @param storyId  이야기 ID (URL PathVariable)
      * @param parentId JWT에서 추출한 보호자 ID (소유권 검증)
      * @param request  childId 포함
-     * @return 생성된 세션 정보
+     * @return 기존 또는 새로 생성된 세션 정보
      */
     @Transactional
     public StorySessionResponseDto.SessionInfo createSession(Long storyId, Long parentId,
@@ -59,6 +63,13 @@ public class StorySessionService {
 
         // 아이 조회 + 보호자 소유 검증
         Child child = getChildWithOwnerCheck(parentId, request.getChildId());
+
+        // 이미 진행 중인 세션이 있으면 기존 세션 반환
+        Optional<StorySession> existing = storySessionRepository
+                .findByChildIdAndStoryIdAndStatus(child.getId(), story.getId(), "IN_PROGRESS");
+        if (existing.isPresent()) {
+            return StorySessionResponseDto.SessionInfo.from(existing.get());
+        }
 
         // 세션 생성 및 저장
         StoryScene firstScene = storySceneRepository.findByStoryIdAndSceneOrder(story.getId(), 1)
@@ -72,7 +83,7 @@ public class StorySessionService {
      *
      * @param sessionId 세션 ID
      * @param parentId  JWT에서 추출한 보호자 ID (소유권 검증)
-     * @return 세션 정보 (currentSceneId 포함)
+     * @return 세션 정보 (currentSceneId + 대화 메시지 이력 포함)
      */
     public StorySessionResponseDto.SessionInfo getSession(Long sessionId, Long parentId) {
 
@@ -84,7 +95,14 @@ public class StorySessionService {
             throw new CustomException(SessionErrorCode.SESSION_ACCESS_DENIED);
         }
 
-        return StorySessionResponseDto.SessionInfo.from(session);
+        // 세션 대화 이력 조회 (발화 순서 오름차순)
+        List<StorySessionResponseDto.MessageInfo> messages = messageRepository
+                .findBySessionIdOrderByTurnOrderAsc(sessionId)
+                .stream()
+                .map(StorySessionResponseDto.MessageInfo::from)
+                .toList();
+
+        return StorySessionResponseDto.SessionInfo.from(session, messages);
     }
 
     // ─────────── private ────────────────

@@ -41,7 +41,7 @@ public class Child extends BaseEntity {
     @Column(name = "name", nullable = false, length = 50)
     private String name;
 
-    @Comment("아이 출생연도 (연령은 현재연도 - 출생연도로 계산)")
+    @Comment("아이 출생연도 (ex. 2018) — 나이는 서버에서 현재연도 - birth_year 로 계산")
     @Column(name = "birth_year", nullable = false)
     private Integer birthYear;
 
@@ -69,5 +69,12 @@ public class Child extends BaseEntity {
     public void updateProfile(String name, Integer birthYear) {
         this.name = name;
         this.birthYear = birthYear;
+    }
+
+    /**
+     * 연도 기준 나이 계산 (현재연도 - 출생연도)
+     */
+    public int calculateAge() {
+        return java.time.Year.now().getValue() - this.birthYear;
     }
 }
