@@ -89,7 +89,10 @@ public class ActivityService {
         PostActivityConfig config = parseConfig(session.getStory().getPostActivityConfig());
         boolean orderCorrect = isOrderCorrect(request.getSubmittedOrder(), config);
 
-        activity.complete(toJson(request.getSubmittedOrder()), orderCorrect, request.getReconstructionText());
+        // 카드 순서 제출 (시도 횟수 증가 + 정답 여부 저장)
+        activity.submitOrder(toJson(request.getSubmittedOrder()), orderCorrect);
+        // 재구성 텍스트 저장 및 완료 처리
+        activity.complete(request.getReconstructionText());
 
         List<String> keywords = orderCorrect ? config.getRetellingKeywords() : List.of();
         return ActivityResponseDto.ActivityResult.of(activity, keywords);

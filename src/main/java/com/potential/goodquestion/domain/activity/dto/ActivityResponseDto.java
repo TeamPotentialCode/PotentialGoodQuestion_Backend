@@ -63,9 +63,9 @@ public class ActivityResponseDto {
                     .sessionId(activity.getSession().getId())
                     .orderCorrect(Boolean.TRUE.equals(activity.getIsOrderCorrect()))
                     .retellingKeywords(retellingKeywords)
-                    .reconstructionText(activity.getReconstructionText())
-                    .completed(Boolean.TRUE.equals(activity.getIsCompleted()))
-                    .completedAt(activity.getUpdatedAt())
+                    .reconstructionText(activity.getRetellingText())
+                    .completed(activity.getCompletedAt() != null)
+                    .completedAt(activity.getCompletedAt())
                     .build();
         }
     }
