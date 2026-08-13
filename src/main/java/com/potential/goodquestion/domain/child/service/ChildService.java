@@ -11,7 +11,7 @@ import com.potential.goodquestion.domain.parent.repository.ParentRepository;
 import java.time.Year;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import com.potential.goodquestion.common.code.AuthErrorCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -106,7 +106,7 @@ public class ChildService {
      */
     private Parent getParent(Long parentId) {
         return parentRepository.findById(parentId)
-                .orElseThrow(() -> new UsernameNotFoundException("보호자를 찾을 수 없습니다: " + parentId));
+                .orElseThrow(() -> new CustomException(AuthErrorCode.PARENT_NOT_FOUND));
     }
 
     /**

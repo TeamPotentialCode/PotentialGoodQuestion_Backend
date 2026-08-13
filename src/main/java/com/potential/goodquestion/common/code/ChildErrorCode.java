@@ -18,7 +18,10 @@ public enum ChildErrorCode implements ErrorCode {
     CHILD_ACCESS_DENIED(HttpStatus.FORBIDDEN, "CHILD_002", "해당 아이 프로필에 접근 권한이 없습니다."),
 
     // 아이 수 제한 (MVP: 계정당 1명 / 정식 서비스: 3명으로 변경 예정)
-    CHILD_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "CHILD_003", "등록 가능한 아이 수를 초과했습니다.");
+    CHILD_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "CHILD_003", "등록 가능한 아이 수를 초과했습니다."),
+
+    // 동의
+    CONSENT_NOT_FOUND(HttpStatus.NOT_FOUND, "CHILD_004", "유효한 동의 정보를 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

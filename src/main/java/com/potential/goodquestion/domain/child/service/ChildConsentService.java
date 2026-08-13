@@ -63,7 +63,7 @@ public class ChildConsentService {
         Child child = getChildWithOwnerCheck(childId, parentId);
 
         ChildConsent consent = childConsentRepository.findActiveConsentByChild(child)
-                .orElseThrow(() -> new CustomException(ChildErrorCode.CHILD_NOT_FOUND));  // TODO: ConsentErrorCode 추가
+                .orElseThrow(() -> new CustomException(ChildErrorCode.CONSENT_NOT_FOUND));
 
         return ChildConsentResponseDto.ConsentInfo.from(consent);
     }
@@ -80,7 +80,7 @@ public class ChildConsentService {
         Child child = getChildWithOwnerCheck(childId, parentId);
 
         ChildConsent consent = childConsentRepository.findActiveConsentByChild(child)
-                .orElseThrow(() -> new CustomException(ChildErrorCode.CHILD_NOT_FOUND));  // TODO: ConsentErrorCode 추가
+                .orElseThrow(() -> new CustomException(ChildErrorCode.CONSENT_NOT_FOUND));
 
         consent.withdraw();
     }
