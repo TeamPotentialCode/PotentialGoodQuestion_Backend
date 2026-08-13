@@ -44,8 +44,9 @@ public class AnalysisLlmClient {
                         Map.of("role", "system", "content", SYSTEM_PROMPT),
                         Map.of("role", "user", "content", userPrompt)
                 ),
-                "max_completion_tokens", 4000,
-                "reasoning_effort", "medium"
+                "response_format", Map.of("type", "json_object"),
+                "max_tokens", 500,
+                "temperature", 0.3
         );
 
         Exception lastException = null;

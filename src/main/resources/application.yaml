@@ -97,7 +97,7 @@ openai:
   api-key: ${OPENAI_API_KEY}
   base-url: https://api.openai.com/v1
   model:
-    analysis: gpt-5-mini
+    analysis: gpt-4o-mini
     character: gpt-4o-mini
     stt: whisper-1
     tts: tts-1
