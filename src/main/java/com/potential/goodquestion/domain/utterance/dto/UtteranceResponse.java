@@ -11,7 +11,8 @@ public record UtteranceResponse(
         CharacterMessageResult characterMessage,
         boolean sceneCompleted,
         Long nextSceneId,
-        boolean showMission
+        boolean showMission,
+        String missionType
 ) {
     public record AnalysisResult(
             String childIntent,

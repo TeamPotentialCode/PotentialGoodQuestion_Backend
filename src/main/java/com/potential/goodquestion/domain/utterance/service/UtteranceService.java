@@ -146,10 +146,11 @@ public class UtteranceService {
         }
 
         boolean showMission = resolveMissionDisplay(scene, state, newlyDetected);
+        String missionType = showMission ? resolveMissionType(scene) : null;
 
         return buildResponse(sessionId, scene, childMessage, rawAnalysis,
                 processedElements, judgeResult, accumulated, state,
-                characterMessage, sceneCompleted, nextSceneId, showMission);
+                characterMessage, sceneCompleted, nextSceneId, showMission, missionType);
     }
 
     private static final int SCENE_CONTEXT_MAX_LENGTH = 300;
@@ -231,6 +232,12 @@ public class UtteranceService {
                 .orElseGet(() -> { session.complete(); return null; });
     }
 
+    private String resolveMissionType(StoryScene scene) {
+        Set<String> required = jsonUtils.toStringSet(scene.getRequiredElements());
+        return (required.contains("EMOTION") || required.contains("PERSPECTIVE"))
+                ? "MISSION_2" : "MISSION_1";
+    }
+
     private boolean resolveMissionDisplay(StoryScene scene, SessionState state, Set<String> newlyDetected) {
         if (!scene.isHasMission() || judgeResult_isClosing(state)) return false;
         if (state.requiredElements().contains("EMOTION") || state.requiredElements().contains("PERSPECTIVE")) {
@@ -273,7 +280,7 @@ public class UtteranceService {
             AnalysisResponse rawAnalysis, List<DetectedElement> processedElements,
             ProgressJudgeResult judgeResult, Set<String> accumulated,
             SessionState state, Message characterMessage,
-            boolean sceneCompleted, Long nextSceneId, boolean showMission) {
+            boolean sceneCompleted, Long nextSceneId, boolean showMission, String missionType) {
         return new UtteranceResponse(
                 sessionId, scene.getId(), childMessage.getId(),
                 new UtteranceResponse.AnalysisResult(
@@ -294,7 +301,7 @@ public class UtteranceService {
                         characterMessage.getText(),
                         sceneCompleted
                 ),
-                sceneCompleted, nextSceneId, showMission
+                sceneCompleted, nextSceneId, showMission, missionType
         );
     }
 }
