@@ -4,6 +4,7 @@ import com.potential.goodquestion.common.code.ChildErrorCode;
 import com.potential.goodquestion.common.code.SessionErrorCode;
 import com.potential.goodquestion.common.exception.CustomException;
 import com.potential.goodquestion.domain.child.entity.Child;
+import com.potential.goodquestion.domain.child.repository.ChildConsentRepository;
 import com.potential.goodquestion.domain.child.repository.ChildRepository;
 import com.potential.goodquestion.domain.message.repository.MessageRepository;
 import com.potential.goodquestion.domain.scene.entity.StoryScene;
@@ -28,7 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
  * - GET  /api/sessions/{sessionId}       : 세션 정보 조회 (이어하기 복귀)
  *
  * 보안:
- * - createSession: 보호자 소유 아이인지 검증
+ * - createSession: 보호자 소유 아이인지 검증 + 유효한 동의 존재 여부 검증
  * - getSession: 해당 아이의 보호자인지 검증
  */
 @Service
@@ -39,6 +40,7 @@ public class StorySessionService {
     private final StorySessionRepository storySessionRepository;
     private final StoryRepository storyRepository;
     private final ChildRepository childRepository;
+    private final ChildConsentRepository childConsentRepository;
     private final StorySceneRepository storySceneRepository;
     private final MessageRepository messageRepository;
 
@@ -63,6 +65,12 @@ public class StorySessionService {
 
         // 아이 조회 + 보호자 소유 검증
         Child child = getChildWithOwnerCheck(parentId, request.getChildId());
+
+        // 동의 여부 검증: 유효한 동의(철회되지 않은)가 없으면 세션 시작 불가
+        boolean hasActiveConsent = childConsentRepository.existsActiveConsentByChild(child);
+        if (!hasActiveConsent) {
+            throw new CustomException(ChildErrorCode.CONSENT_NOT_FOUND);
+        }
 
         // 이미 진행 중인 세션이 있으면 기존 세션 반환
         Optional<StorySession> existing = storySessionRepository
