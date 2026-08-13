@@ -1,6 +1,6 @@
 package com.potential.goodquestion.common.openai;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Set;
 import com.potential.goodquestion.common.code.AiErrorCode;
@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class WhisperClient {
 
     private final RestClient openAiRestClient;
+    private final ObjectMapper objectMapper;
 
     @Value("${openai.model.stt}")
     private String model;
@@ -45,14 +46,13 @@ public class WhisperClient {
             multipart.add("language", "ko");
             multipart.add("prompt", STT_HINT);
 
-            return openAiRestClient.post()
+            String responseJson = openAiRestClient.post()
                     .uri("/audio/transcriptions")
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .body(multipart)
                     .retrieve()
-                    .body(JsonNode.class)
-                    .get("text")
-                    .asText();
+                    .body(String.class);
+            return objectMapper.readTree(responseJson).get("text").asText();
         } catch (IOException e) {
             throw new CustomException(AiErrorCode.STT_FAILED);
         }
