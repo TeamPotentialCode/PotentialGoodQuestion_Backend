@@ -5,6 +5,8 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
+import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,6 +17,10 @@ public class SwaggerConfig {
     public OpenAPI openAPI() {
         String schemeName = "bearerAuth";
         return new OpenAPI()
+                .servers(List.of(
+                        new Server().url("https://potentialgoodquestionbackend-production.up.railway.app"),
+                        new Server().url("http://localhost:8080")
+                ))
                 .info(new Info()
                         .title("GoodQuestion API")
                         .description("굿퀘스천 백엔드 API 문서")
