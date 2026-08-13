@@ -70,6 +70,12 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/refresh"
                         ).permitAll()
+                        // Swagger UI
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
+                        ).permitAll()
                         // OAuth2 소셜 로그인 엔드포인트
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         // 나머지는 인증 필요
