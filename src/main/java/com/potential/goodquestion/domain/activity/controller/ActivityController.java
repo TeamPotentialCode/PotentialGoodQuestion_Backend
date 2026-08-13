@@ -5,6 +5,9 @@ import com.potential.goodquestion.common.security.CustomUserPrincipal;
 import com.potential.goodquestion.domain.activity.dto.ActivityRequestDto;
 import com.potential.goodquestion.domain.activity.dto.ActivityResponseDto;
 import com.potential.goodquestion.domain.activity.service.ActivityService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,52 +19,28 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * 말하기 후 활동 컨트롤러
- *
- * POST  /api/sessions/{sessionId}/activity : 후 활동 시작 (카드 무작위 제시)
- * PATCH /api/sessions/{sessionId}/activity : 카드 순서 제출·재구성 텍스트 저장·완료 처리
- *
- * 모든 엔드포인트 JWT 인증 필수
- */
+@Tag(name = "Activity", description = "말하기 후 활동 API")
 @RestController
 @RequiredArgsConstructor
 public class ActivityController {
 
     private final ActivityService activityService;
 
-    /**
-     * 후 활동 시작 - 카드 제시
-     * POST /api/sessions/{sessionId}/activity
-     *
-     * @param sessionId 세션 ID
-     * @param principal JWT 인증된 보호자 정보
-     * @return 무작위 순서로 제시할 카드 목록
-     */
+    @Operation(summary = "후 활동 시작", description = "이야기 완료 후 카드 순서 맞추기 활동을 시작합니다. 카드가 무작위 순서로 반환됩니다.")
     @PostMapping("/api/sessions/{sessionId}/activity")
     public ResponseEntity<ApiResponse<ActivityResponseDto.CardSet>> startActivity(
-            @PathVariable Long sessionId,
+            @Parameter(description = "세션 ID") @PathVariable Long sessionId,
             @AuthenticationPrincipal CustomUserPrincipal principal) {
-
         ActivityResponseDto.CardSet cards = activityService.startActivity(sessionId, principal.getParentId());
         return ResponseEntity.ok(ApiResponse.success("말하기 후 활동을 시작했습니다.", cards));
     }
 
-    /**
-     * 카드 순서 제출·재구성 텍스트 저장·완료 처리
-     * PATCH /api/sessions/{sessionId}/activity
-     *
-     * @param sessionId 세션 ID
-     * @param principal JWT 인증된 보호자 정보
-     * @param request   제출한 카드 순서 + 재구성 텍스트
-     * @return 정답 여부 및 (정답 시) 재구성 핵심 단어
-     */
+    @Operation(summary = "카드 순서 제출 및 재구성 저장", description = "아이가 배열한 카드 순서와 이야기 재구성 텍스트를 제출합니다.")
     @PatchMapping("/api/sessions/{sessionId}/activity")
     public ResponseEntity<ApiResponse<ActivityResponseDto.ActivityResult>> submitActivity(
-            @PathVariable Long sessionId,
+            @Parameter(description = "세션 ID") @PathVariable Long sessionId,
             @AuthenticationPrincipal CustomUserPrincipal principal,
             @Valid @RequestBody ActivityRequestDto.Submit request) {
-
         ActivityResponseDto.ActivityResult result =
                 activityService.submitActivity(sessionId, principal.getParentId(), request);
         return ResponseEntity.ok(ApiResponse.success("말하기 후 활동을 완료했습니다.", result));

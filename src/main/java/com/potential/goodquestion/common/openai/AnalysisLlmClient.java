@@ -7,10 +7,12 @@ import com.potential.goodquestion.common.openai.dto.AnalysisResponse;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AnalysisLlmClient {
@@ -42,9 +44,8 @@ public class AnalysisLlmClient {
                         Map.of("role", "system", "content", SYSTEM_PROMPT),
                         Map.of("role", "user", "content", userPrompt)
                 ),
-                "response_format", Map.of("type", "json_object"),
-                "max_completion_tokens", 500,
-                "temperature", 0.3
+                "max_completion_tokens", 4000,
+                "reasoning_effort", "medium"
         );
 
         Exception lastException = null;
@@ -55,10 +56,12 @@ public class AnalysisLlmClient {
                         .body(body)
                         .retrieve()
                         .body(String.class);
+                log.info("OpenAI 응답 원문: {}", responseJson);
                 String rawJson = objectMapper.readTree(responseJson)
                         .get("choices").get(0).get("message").get("content").asText();
                 return objectMapper.readValue(rawJson, AnalysisResponse.class);
             } catch (Exception e) {
+                log.error("발화 분석 LLM 호출 실패 (attempt {}): {}", attempt + 1, e.getMessage(), e);
                 lastException = e;
             }
         }
