@@ -44,20 +44,20 @@ public class CharacterResponseClient {
                         Map.of("role", "user", "content", userPrompt)
                 ),
                 "response_format", Map.of("type", "json_object"),
-                "max_tokens", 200,
+                "max_completion_tokens", 200,
                 "temperature", 0.7
         );
 
         Exception lastException = null;
         for (int attempt = 0; attempt < 2; attempt++) {
             try {
-                String rawJson = openAiRestClient.post()
+                String responseJson = openAiRestClient.post()
                         .uri("/chat/completions")
                         .body(body)
                         .retrieve()
-                        .body(JsonNode.class)
-                        .get("choices").get(0).get("message").get("content")
-                        .asText();
+                        .body(String.class);
+                String rawJson = objectMapper.readTree(responseJson)
+                        .get("choices").get(0).get("message").get("content").asText();
                 return objectMapper.readValue(rawJson, CharacterResponse.class);
             } catch (Exception e) {
                 lastException = e;
