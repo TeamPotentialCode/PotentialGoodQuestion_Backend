@@ -98,7 +98,7 @@ openai:
   base-url: https://api.openai.com/v1
   model:
     analysis: gpt-5-mini
-    character: gpt-5-mini
+    character: gpt-4o-mini
     stt: whisper-1
     tts: tts-1
     tts-voice: nova

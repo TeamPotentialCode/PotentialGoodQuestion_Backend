@@ -43,7 +43,9 @@ public class CharacterResponseClient {
                         Map.of("role", "system", "content", systemPrompt),
                         Map.of("role", "user", "content", userPrompt)
                 ),
-                "max_completion_tokens", 2000
+                "response_format", Map.of("type", "json_object"),
+                "max_tokens", 500,
+                "temperature", 0.7
         );
 
         Exception lastException = null;
