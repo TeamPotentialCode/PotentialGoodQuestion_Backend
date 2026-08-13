@@ -120,6 +120,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         List<String> origins = new java.util.ArrayList<>(Arrays.asList(allowedOrigins.split(",")));
         origins.add("https://potentialgoodquestionbackend-production.up.railway.app");
+        origins.add("https://potential-good-question-frontend.vercel.app");
         configuration.setAllowedOrigins(origins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
