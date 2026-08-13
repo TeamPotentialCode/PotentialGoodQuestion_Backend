@@ -44,8 +44,7 @@ public class AnalysisLlmClient {
                         Map.of("role", "system", "content", SYSTEM_PROMPT),
                         Map.of("role", "user", "content", userPrompt)
                 ),
-                "response_format", Map.of("type", "json_object"),
-                "max_completion_tokens", 500
+                "max_completion_tokens", 4000
         );
 
         Exception lastException = null;
@@ -56,6 +55,7 @@ public class AnalysisLlmClient {
                         .body(body)
                         .retrieve()
                         .body(String.class);
+                log.info("OpenAI 응답 원문: {}", responseJson);
                 String rawJson = objectMapper.readTree(responseJson)
                         .get("choices").get(0).get("message").get("content").asText();
                 return objectMapper.readValue(rawJson, AnalysisResponse.class);

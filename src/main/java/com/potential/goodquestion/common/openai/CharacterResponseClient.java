@@ -43,7 +43,6 @@ public class CharacterResponseClient {
                         Map.of("role", "system", "content", systemPrompt),
                         Map.of("role", "user", "content", userPrompt)
                 ),
-                "response_format", Map.of("type", "json_object"),
                 "max_completion_tokens", 200
         );
 
