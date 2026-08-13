@@ -43,7 +43,7 @@ public class CharacterResponseClient {
                         Map.of("role", "system", "content", systemPrompt),
                         Map.of("role", "user", "content", userPrompt)
                 ),
-                "max_completion_tokens", 200
+                "max_completion_tokens", 2000
         );
 
         Exception lastException = null;
