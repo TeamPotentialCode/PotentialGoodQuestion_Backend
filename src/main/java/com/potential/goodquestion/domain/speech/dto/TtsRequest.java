@@ -10,7 +10,7 @@ public record TtsRequest(
         @NotBlank String text,
 
         @Schema(description = "목소리 선택 (선택, 기본값: nova)", example = "nova",
-                allowableValues = {"alloy", "echo", "fable", "onyx", "nova", "shimmer"})
-        @Pattern(regexp = "^(alloy|echo|fable|onyx|nova|shimmer)$", message = "지원하지 않는 목소리입니다.")
+                allowableValues = {"alloy", "ash", "coral", "echo", "fable", "onyx", "nova", "sage", "shimmer"})
+        @Pattern(regexp = "^(alloy|ash|coral|echo|fable|onyx|nova|sage|shimmer)$", message = "지원하지 않는 목소리입니다.")
         String voice
 ) {}
