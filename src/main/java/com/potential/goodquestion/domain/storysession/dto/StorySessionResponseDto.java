@@ -1,6 +1,7 @@
 package com.potential.goodquestion.domain.storysession.dto;
 
 import com.potential.goodquestion.domain.message.entity.Message;
+import com.potential.goodquestion.domain.scene.entity.StoryScene;
 import com.potential.goodquestion.domain.storysession.entity.StorySession;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -95,6 +96,48 @@ public class StorySessionResponseDto {
                     .startedAt(session.getStartedAt())
                     .completedAt(session.getCompletedAt())
                     .messages(messages)
+                    .build();
+        }
+    }
+
+    /**
+     * 내레이션 장면 완료 응답
+     * POST /api/sessions/{sessionId}/scenes/{sceneId}/narration-complete 응답에 사용
+     *
+     * nextCharacterName 이 null 이면 다음 장면도 내레이션(전개)이므로
+     * 클라이언트는 narration-complete 를 연속으로 호출한다.
+     * nextSceneId 가 null 이면 더 이상 장면이 없다는 의미이다(정상 흐름에서는 발생하지 않음).
+     */
+    @Getter
+    @Builder
+    public static class NarrationResult {
+
+        /** 방금 완료한 내레이션 장면 ID */
+        private Long completedSceneId;
+
+        /** 방금 완료한 내레이션 장면 순서 */
+        private Integer completedSceneOrder;
+
+        /** 다음 장면 ID (없으면 null) */
+        private Long nextSceneId;
+
+        /** 다음 장면 순서 (없으면 null) */
+        private Integer nextSceneOrder;
+
+        /**
+         * 다음 장면 캐릭터 이름
+         * null → 다음 장면도 내레이션(전개·도입)
+         * non-null → 다음 장면이 대화 장면이므로 발화 입력 활성화
+         */
+        private String nextCharacterName;
+
+        public static NarrationResult of(StoryScene completed, StoryScene next) {
+            return NarrationResult.builder()
+                    .completedSceneId(completed.getId())
+                    .completedSceneOrder(completed.getSceneOrder())
+                    .nextSceneId(next != null ? next.getId() : null)
+                    .nextSceneOrder(next != null ? next.getSceneOrder() : null)
+                    .nextCharacterName(next != null ? next.getCharacterName() : null)
                     .build();
         }
     }
