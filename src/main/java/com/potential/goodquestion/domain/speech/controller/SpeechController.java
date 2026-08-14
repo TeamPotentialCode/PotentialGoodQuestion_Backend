@@ -45,6 +45,6 @@ public class SpeechController {
     public ResponseEntity<byte[]> tts(@RequestBody @Valid TtsRequest request) {
         return ResponseEntity.ok()
                 .contentType(MediaType.valueOf("audio/mpeg"))
-                .body(ttsService.synthesize(request.text()));
+                .body(ttsService.synthesize(request.text(), request.voice()));
     }
 }

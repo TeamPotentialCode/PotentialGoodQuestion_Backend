@@ -20,7 +20,7 @@ public class OpenAiTtsClient {
     @Value("${openai.model.tts-voice}")
     private String voice;
 
-    public byte[] synthesize(String text) {
+    public byte[] synthesize(String text, String voice) {
         try {
             Map<String, Object> body = Map.of(
                     "model", model,
