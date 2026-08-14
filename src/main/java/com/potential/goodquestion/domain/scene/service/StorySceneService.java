@@ -5,6 +5,7 @@ import com.potential.goodquestion.common.exception.CustomException;
 import com.potential.goodquestion.domain.scene.dto.SceneResponseDto;
 import com.potential.goodquestion.domain.scene.entity.StoryScene;
 import com.potential.goodquestion.domain.scene.repository.StorySceneRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,7 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
  * StoryScene 서비스
  *
  * 담당 API:
- * - GET /api/stories/{storyId}/scenes/{sceneId} : 장면 정보 조회 (고정 첫 대사 포함)
+ * - GET /api/stories/{storyId}/scenes          : 장면 목록 전체 조회 (sceneOrder 오름차순)
+ * - GET /api/stories/{storyId}/scenes/{sceneId} : 장면 정보 단건 조회 (고정 첫 대사 포함)
  *
  * sceneId 는 장면의 PK(StoryScene.id)다.
  * (DB_구조 기준: story_sessions.current_scene_id, messages.scene_id 모두 story_scenes.id 를 참조)
@@ -27,7 +29,20 @@ public class StorySceneService {
     private final StorySceneRepository storySceneRepository;
 
     /**
-     * 장면 정보 조회
+     * 이야기에 속한 장면 목록 전체 조회 (sceneOrder 오름차순)
+     *
+     * @param storyId 이야기 ID
+     * @return 장면 목록 (sceneOrder 오름차순)
+     */
+    public List<SceneResponseDto.SceneInfo> getScenes(Long storyId) {
+        List<StoryScene> scenes = storySceneRepository.findByStoryIdOrderBySceneOrder(storyId);
+        return scenes.stream()
+                .map(SceneResponseDto.SceneInfo::from)
+                .toList();
+    }
+
+    /**
+     * 장면 정보 단건 조회
      *
      * @param storyId 이야기 ID (소속 검증용)
      * @param sceneId 장면 ID (StoryScene.id)
