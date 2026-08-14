@@ -18,7 +18,24 @@ BEGIN;
 -- stories.topic 컬럼이 NOT NULL 로 남아있어 INSERT를 막으므로 제약만 해제
 ALTER TABLE stories ALTER COLUMN topic DROP NOT NULL;
 
--- 기존 데이터 정리 (재실행 안전)
+-- 기존 데이터 정리 (재실행 안전, 외래키 참조 순서대로 삭제)
+DELETE FROM post_activity_results
+ WHERE session_id IN (
+     SELECT id FROM story_sessions
+      WHERE story_id IN (SELECT id FROM stories WHERE title = '방귀 뀌는 며느리')
+ );
+DELETE FROM activities
+ WHERE session_id IN (
+     SELECT id FROM story_sessions
+      WHERE story_id IN (SELECT id FROM stories WHERE title = '방귀 뀌는 며느리')
+ );
+DELETE FROM messages
+ WHERE session_id IN (
+     SELECT id FROM story_sessions
+      WHERE story_id IN (SELECT id FROM stories WHERE title = '방귀 뀌는 며느리')
+ );
+DELETE FROM story_sessions
+ WHERE story_id IN (SELECT id FROM stories WHERE title = '방귀 뀌는 며느리');
 DELETE FROM story_scenes
  WHERE story_id IN (SELECT id FROM stories WHERE title = '방귀 뀌는 며느리');
 DELETE FROM stories WHERE title = '방귀 뀌는 며느리';
