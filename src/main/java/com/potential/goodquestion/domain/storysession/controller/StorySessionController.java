@@ -38,6 +38,22 @@ public class StorySessionController {
                 .body(ApiResponse.success("학습 세션이 시작되었습니다.", session));
     }
 
+    @Operation(
+        summary = "내레이션 장면 완료",
+        description = "도입·전개 내레이션 장면 재생이 끝났을 때 호출합니다. "
+            + "currentScene 이 다음 장면으로 이동하며, nextCharacterName 이 null 이면 다음 장면도 내레이션, "
+            + "non-null 이면 대화 장면이므로 발화 입력을 활성화하세요."
+    )
+    @PostMapping("/api/sessions/{sessionId}/scenes/{sceneId}/narration-complete")
+    public ResponseEntity<ApiResponse<StorySessionResponseDto.NarrationResult>> completeNarration(
+            @Parameter(description = "세션 ID") @PathVariable Long sessionId,
+            @Parameter(description = "완료한 내레이션 장면 ID") @PathVariable Long sceneId,
+            @AuthenticationPrincipal CustomUserPrincipal principal) {
+        StorySessionResponseDto.NarrationResult result =
+                storySessionService.completeNarration(sessionId, sceneId, principal.getParentId());
+        return ResponseEntity.ok(ApiResponse.success("내레이션 장면을 완료했습니다.", result));
+    }
+
     @Operation(summary = "세션 정보 조회", description = "세션의 현재 장면, 상태 등을 반환합니다. 이어하기 복귀 시 사용하세요.")
     @GetMapping("/api/sessions/{sessionId}")
     public ResponseEntity<ApiResponse<StorySessionResponseDto.SessionInfo>> getSession(

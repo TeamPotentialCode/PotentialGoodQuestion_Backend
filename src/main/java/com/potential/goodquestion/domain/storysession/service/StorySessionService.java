@@ -2,6 +2,7 @@ package com.potential.goodquestion.domain.storysession.service;
 
 import com.potential.goodquestion.common.code.ChildErrorCode;
 import com.potential.goodquestion.common.code.SessionErrorCode;
+import com.potential.goodquestion.common.code.StoryErrorCode;
 import com.potential.goodquestion.common.exception.CustomException;
 import com.potential.goodquestion.domain.child.entity.Child;
 import com.potential.goodquestion.domain.child.repository.ChildConsentRepository;
@@ -111,6 +112,60 @@ public class StorySessionService {
                 .toList();
 
         return StorySessionResponseDto.SessionInfo.from(session, messages);
+    }
+
+    /**
+     * 내레이션(전개·도입) 장면 완료 처리
+     *
+     * 전개·도입 장면 재생이 끝났을 때 클라이언트가 호출한다.
+     * session.currentScene 을 다음 장면으로 전진시키고, 다음 장면 정보를 반환한다.
+     *
+     * - nextCharacterName 이 null → 다음 장면도 내레이션
+     * - nextCharacterName 이 non-null → 다음 장면이 대화 장면이므로 발화 입력을 활성화할 것
+     *
+     * @param sessionId 세션 ID
+     * @param sceneId   완료한 내레이션 장면 ID
+     * @param parentId  JWT에서 추출한 보호자 ID (소유권 검증)
+     */
+    @Transactional
+    public StorySessionResponseDto.NarrationResult completeNarration(
+            Long sessionId, Long sceneId, Long parentId) {
+
+        StorySession session = storySessionRepository.findById(sessionId)
+                .orElseThrow(() -> new CustomException(SessionErrorCode.SESSION_NOT_FOUND));
+
+        if (!session.getChild().getParent().getId().equals(parentId)) {
+            throw new CustomException(SessionErrorCode.SESSION_ACCESS_DENIED);
+        }
+        if (!"IN_PROGRESS".equals(session.getStatus())) {
+            throw new CustomException(SessionErrorCode.SESSION_NOT_FOUND);
+        }
+
+        StoryScene scene = storySceneRepository.findById(sceneId)
+                .orElseThrow(() -> new CustomException(StoryErrorCode.SCENE_NOT_FOUND));
+
+        if (!scene.getStory().getId().equals(session.getStory().getId())) {
+            throw new CustomException(StoryErrorCode.SCENE_NOT_FOUND);
+        }
+
+        // 대화 장면(characterName 존재)은 발화 API로 처리하므로 이 엔드포인트에서는 거부
+        if (scene.getCharacterName() != null) {
+            throw new CustomException(StoryErrorCode.NOT_NARRATION_SCENE);
+        }
+
+        // 바로 다음 장면 탐색 (내레이션·대화 구분 없이 sceneOrder 기준)
+        StoryScene nextScene = storySceneRepository
+                .findByStoryIdOrderBySceneOrder(session.getStory().getId())
+                .stream()
+                .filter(s -> s.getSceneOrder() > scene.getSceneOrder())
+                .findFirst()
+                .orElse(null);
+
+        if (nextScene != null) {
+            session.advanceScene(nextScene);
+        }
+
+        return StorySessionResponseDto.NarrationResult.of(scene, nextScene);
     }
 
     // ─────────── private ────────────────
