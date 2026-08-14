@@ -42,6 +42,14 @@ public class StoryController {
         return ResponseEntity.ok(ApiResponse.success("이야기 상세를 조회했습니다.", story));
     }
 
+    @Operation(summary = "장면 목록 조회", description = "이야기에 속한 모든 장면을 sceneOrder 오름차순으로 반환합니다. 이야기 시작 전 한 번만 호출해 클라이언트에 캐시하세요.")
+    @GetMapping("/{storyId}/scenes")
+    public ResponseEntity<ApiResponse<List<SceneResponseDto.SceneInfo>>> getScenes(
+            @Parameter(description = "이야기 ID") @PathVariable Long storyId) {
+        List<SceneResponseDto.SceneInfo> scenes = storySceneService.getScenes(storyId);
+        return ResponseEntity.ok(ApiResponse.success("장면 목록을 조회했습니다.", scenes));
+    }
+
     @Operation(summary = "장면 정보 조회", description = "장면의 고정 첫 대사(character_opening) 및 상황 정보를 반환합니다. 대화 장면 진입 시 호출하세요.")
     @GetMapping("/{storyId}/scenes/{sceneId}")
     public ResponseEntity<ApiResponse<SceneResponseDto.SceneInfo>> getScene(
