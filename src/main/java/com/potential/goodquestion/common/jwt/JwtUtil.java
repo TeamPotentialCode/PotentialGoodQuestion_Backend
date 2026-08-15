@@ -60,6 +60,30 @@ public class JwtUtil {
     }
 
     /**
+     * 관리자 Access Token 생성
+     * subject를 "ADMIN"으로 고정하고 role: ADMIN 클레임 포함
+     * DB 조회 없이 권한을 부여하기 위해 일반 토큰과 구분
+     */
+    public String generateAdminToken() {
+        Date now = new Date();
+        return Jwts.builder()
+                .setSubject("ADMIN")
+                .claim("tokenType", "ACCESS")
+                .claim("role", "ADMIN")
+                .setIssuedAt(now)
+                .setExpiration(new Date(now.getTime() + accessExpiration))
+                .signWith(key, signatureAlgorithm)
+                .compact();
+    }
+
+    /**
+     * 토큰에서 role 클레임 추출 (일반 사용자 토큰이면 null 반환)
+     */
+    public String getRole(String token) {
+        return getClaims(token).get("role", String.class);
+    }
+
+    /**
      * HTTP Authorization 헤더에서 "Bearer " 접두사 제거 후 토큰 반환
      */
     public String resolveToken(String bearerToken) {

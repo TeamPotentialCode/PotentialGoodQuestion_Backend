@@ -78,6 +78,10 @@ public class SecurityConfig {
                         ).permitAll()
                         // OAuth2 소셜 로그인 엔드포인트
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+                        // 관리자 로그인은 인증 없이 접근 가능
+                        .requestMatchers("/api/admin/auth/**").permitAll()
+                        // 관리자 전용 API (ROLE_ADMIN 필요)
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // 나머지는 인증 필요
                         .anyRequest().authenticated()
                 )

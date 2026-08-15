@@ -1,6 +1,7 @@
 package com.potential.goodquestion.domain.storysession.repository;
 
 import com.potential.goodquestion.domain.storysession.entity.StorySession;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,4 +32,14 @@ public interface StorySessionRepository extends JpaRepository<StorySession, Long
      * 아이의 특정 상태 세션 중 가장 최근 활동한 1건 조회 (홈 이어하기용)
      */
     Optional<StorySession> findFirstByChildIdAndStatusOrderByLastActivityAtDesc(Long childId, String status);
+
+    /**
+     * 상태별 세션 수 집계 (관리자 대시보드용)
+     */
+    long countByStatus(String status);
+
+    /**
+     * 특정 기간 내 시작된 세션 수 (오늘 세션 수 집계용)
+     */
+    long countByStartedAtBetween(LocalDateTime start, LocalDateTime end);
 }

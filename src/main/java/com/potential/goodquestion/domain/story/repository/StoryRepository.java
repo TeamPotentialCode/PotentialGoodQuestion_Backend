@@ -25,4 +25,9 @@ public interface StoryRepository extends JpaRepository<Story, Long> {
             + "ORDER BY s.id ASC")
     List<Story> findByStatusAndTopicContaining(@Param("status") String status,
                                                @Param("topic") String topic);
+
+    /**
+     * 상태별 이야기 수 집계 (관리자 대시보드용)
+     */
+    long countByStatus(String status);
 }
