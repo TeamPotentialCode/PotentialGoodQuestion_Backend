@@ -28,4 +28,11 @@ public interface WordRepository extends JpaRepository<Word, Long> {
     @Modifying
     @Query("DELETE FROM Word w WHERE w.child.parent.id = :parentId")
     void deleteByParentId(@Param("parentId") Long parentId);
+
+    /**
+     * 아이의 단어장 전체 삭제 (아이 프로필 삭제 시 연관 데이터 정리용)
+     */
+    @Modifying
+    @Query("DELETE FROM Word w WHERE w.child.id = :childId")
+    void deleteByChildId(@Param("childId") Long childId);
 }

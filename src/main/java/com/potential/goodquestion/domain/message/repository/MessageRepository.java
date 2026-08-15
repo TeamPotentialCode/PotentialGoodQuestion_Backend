@@ -34,4 +34,12 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     @Modifying
     @Query("DELETE FROM Message m WHERE m.session.child.parent.id = :parentId")
     void deleteByParentId(@Param("parentId") Long parentId);
+
+    /**
+     * 아이의 모든 메시지 삭제 (아이 프로필 삭제 시 연관 데이터 정리용)
+     * 참조하는 utterance_analyses 를 먼저 삭제한 뒤 호출해야 한다.
+     */
+    @Modifying
+    @Query("DELETE FROM Message m WHERE m.session.child.id = :childId")
+    void deleteByChildId(@Param("childId") Long childId);
 }

@@ -29,6 +29,9 @@ public class StoryService {
     /** 노출 대상 공개 상태 값 */
     private static final String STATUS_PUBLISHED = "published";
 
+    /** 주제 조회 LIKE 패턴의 이스케이프 문자 (StoryRepository 쿼리의 ESCAPE 와 동일해야 함) */
+    private static final char LIKE_ESCAPE = '!';
+
     private final StoryRepository storyRepository;
     private final JsonUtils jsonUtils;
 
@@ -40,7 +43,7 @@ public class StoryService {
      */
     public List<StoryResponseDto.StorySummary> getStories(String topic) {
         List<Story> stories = StringUtils.hasText(topic)
-                ? storyRepository.findByStatusAndTopicContaining(STATUS_PUBLISHED, topic.trim())
+                ? storyRepository.findByStatusAndTopicElement(STATUS_PUBLISHED, escapeLike(topic.trim()))
                 : storyRepository.findByStatusOrderByIdAsc(STATUS_PUBLISHED);
 
         return stories.stream()
@@ -59,5 +62,24 @@ public class StoryService {
                 .orElseThrow(() -> new CustomException(StoryErrorCode.STORY_NOT_FOUND));
 
         return StoryResponseDto.StoryDetail.of(story, jsonUtils.toStringList(story.getTopics()));
+    }
+
+    // ─────────── private ────────────────
+
+    /**
+     * LIKE 패턴 특수문자를 이스케이프한다.
+     *
+     * 이스케이프하지 않으면 topic 에 들어온 % 나 _ 가 와일드카드로 해석되어
+     * ?topic=% 같은 값 하나로 필터가 무력화된다.
+     */
+    private String escapeLike(String value) {
+        StringBuilder escaped = new StringBuilder(value.length() + 8);
+        for (char c : value.toCharArray()) {
+            if (c == LIKE_ESCAPE || c == '%' || c == '_') {
+                escaped.append(LIKE_ESCAPE);
+            }
+            escaped.append(c);
+        }
+        return escaped.toString();
     }
 }

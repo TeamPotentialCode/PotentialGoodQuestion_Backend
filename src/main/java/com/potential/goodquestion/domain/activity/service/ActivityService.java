@@ -1,5 +1,6 @@
 package com.potential.goodquestion.domain.activity.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.potential.goodquestion.common.code.ActivityErrorCode;
 import com.potential.goodquestion.common.code.SessionErrorCode;
@@ -28,6 +29,7 @@ import org.springframework.util.StringUtils;
  * 담당 API:
  * - POST  /api/sessions/{sessionId}/activity : 후 활동 시작 (카드 무작위 제시)
  * - PATCH /api/sessions/{sessionId}/activity : 카드 순서 제출·재구성 텍스트 저장·완료 처리
+ * - GET   /api/sessions/{sessionId}/activity : 저장된 활동 결과 조회
  *
  * 보안:
  * - 세션의 아이가 로그인 보호자 소유인지 검증
@@ -95,10 +97,49 @@ public class ActivityService {
         activity.complete(request.getReconstructionText());
 
         List<String> keywords = orderCorrect ? config.getRetellingKeywords() : List.of();
-        return ActivityResponseDto.ActivityResult.of(activity, keywords);
+        return ActivityResponseDto.ActivityResult.of(activity, keywords,
+                request.getSubmittedOrder());
+    }
+
+    /**
+     * 후 활동 결과 조회
+     *
+     * 앱을 다시 실행했을 때 제출한 카드 순서와 정답 여부, 재구성 텍스트를 다시 볼 수 있게 한다.
+     * 아직 제출 전(시작만 한 상태)이면 attemptCount 0, submittedOrder 빈 목록으로 반환한다.
+     *
+     * @param sessionId 세션 ID
+     * @param parentId  JWT 보호자 ID (소유권 검증)
+     * @return 저장된 활동 결과
+     */
+    public ActivityResponseDto.ActivityResult getActivity(Long sessionId, Long parentId) {
+        StorySession session = getSessionWithOwnerCheck(sessionId, parentId);
+        Activity activity = activityRepository.findBySessionId(sessionId)
+                .orElseThrow(() -> new CustomException(ActivityErrorCode.ACTIVITY_NOT_FOUND));
+
+        // 제출 결과와 동일한 기준: 정답일 때만 핵심 단어를 제공한다.
+        List<String> keywords = Boolean.TRUE.equals(activity.getIsOrderCorrect())
+                ? parseConfig(session.getStory().getPostActivityConfig()).getRetellingKeywords()
+                : List.of();
+
+        return ActivityResponseDto.ActivityResult.of(activity, keywords,
+                parseSubmittedOrder(activity.getSubmittedOrder()));
     }
 
     // ─────────── private ────────────────
+
+    /**
+     * 저장된 카드 순서 JSON 을 목록으로 파싱한다. (미제출이면 빈 목록)
+     */
+    private List<String> parseSubmittedOrder(String json) {
+        if (!StringUtils.hasText(json)) {
+            return List.of();
+        }
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
 
     /**
      * 세션 조회 + 보호자 소유권 검증
