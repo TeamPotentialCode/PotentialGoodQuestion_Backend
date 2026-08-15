@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Modifying;
 
 public interface UtteranceAnalysisRepository extends JpaRepository<UtteranceAnalysis, Long> {
 
@@ -27,4 +28,13 @@ public interface UtteranceAnalysisRepository extends JpaRepository<UtteranceAnal
            "JOIN FETCH m.session s " +
            "WHERE s.child.id = :childId")
     List<UtteranceAnalysis> findByChildIdWithMessageAndSession(@Param("childId") Long childId);
+
+    /**
+     * 보호자의 모든 발화 분석 삭제 (회원 탈퇴 시 연관 데이터 정리용)
+     * message -> session -> child -> parent 로 이어지는 FK 체인의 최하위이므로 가장 먼저 삭제한다.
+     */
+    @Modifying
+    @Query("DELETE FROM UtteranceAnalysis ua WHERE ua.message.id IN "
+            + "(SELECT m.id FROM Message m WHERE m.session.child.parent.id = :parentId)")
+    void deleteByParentId(@Param("parentId") Long parentId);
 }

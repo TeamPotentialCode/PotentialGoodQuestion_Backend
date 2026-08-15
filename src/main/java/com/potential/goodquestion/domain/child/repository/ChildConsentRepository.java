@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Modifying;
 
 /**
  * 아동 개인정보 처리 동의 레포지토리
@@ -31,4 +32,11 @@ public interface ChildConsentRepository extends JpaRepository<ChildConsent, Long
      */
     @Query("SELECT COUNT(c) > 0 FROM ChildConsent c WHERE c.child = :child AND c.withdrawnAt IS NULL")
     boolean existsActiveConsentByChild(@Param("child") Child child);
+
+    /**
+     * 보호자의 모든 동의 기록 삭제 (회원 탈퇴 시 연관 데이터 정리용)
+     */
+    @Modifying
+    @Query("DELETE FROM ChildConsent c WHERE c.child.parent.id = :parentId")
+    void deleteByParentId(@Param("parentId") Long parentId);
 }

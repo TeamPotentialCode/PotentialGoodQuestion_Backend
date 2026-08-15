@@ -5,6 +5,9 @@ import com.potential.goodquestion.domain.message.entity.Message;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface MessageRepository extends JpaRepository<Message, Long> {
 
@@ -23,4 +26,12 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
      * GET /api/sessions/{sessionId} 대화 내역 포함 시 사용
      */
     List<Message> findBySessionIdOrderByTurnOrderAsc(Long sessionId);
+
+    /**
+     * 보호자의 모든 메시지 삭제 (회원 탈퇴 시 연관 데이터 정리용)
+     * 참조하는 utterance_analyses 를 먼저 삭제한 뒤 호출해야 한다.
+     */
+    @Modifying
+    @Query("DELETE FROM Message m WHERE m.session.child.parent.id = :parentId")
+    void deleteByParentId(@Param("parentId") Long parentId);
 }
