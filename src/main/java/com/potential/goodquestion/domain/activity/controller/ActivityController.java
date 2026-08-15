@@ -35,6 +35,17 @@ public class ActivityController {
         return ResponseEntity.ok(ApiResponse.success("말하기 후 활동을 시작했습니다.", cards));
     }
 
+    @Operation(summary = "후 활동 결과 조회",
+            description = "제출한 카드 순서, 정답 여부, 재구성 텍스트 등 저장된 활동 결과를 반환합니다. 제출 전이면 attemptCount 가 0입니다.")
+    @GetMapping("/api/sessions/{sessionId}/activity")
+    public ResponseEntity<ApiResponse<ActivityResponseDto.ActivityResult>> getActivity(
+            @Parameter(description = "세션 ID") @PathVariable Long sessionId,
+            @AuthenticationPrincipal CustomUserPrincipal principal) {
+        ActivityResponseDto.ActivityResult result =
+                activityService.getActivity(sessionId, principal.getParentId());
+        return ResponseEntity.ok(ApiResponse.success("말하기 후 활동 결과를 조회했습니다.", result));
+    }
+
     @Operation(summary = "카드 순서 제출 및 재구성 저장", description = "아이가 배열한 카드 순서와 이야기 재구성 텍스트를 제출합니다.")
     @PatchMapping("/api/sessions/{sessionId}/activity")
     public ResponseEntity<ApiResponse<ActivityResponseDto.ActivityResult>> submitActivity(
