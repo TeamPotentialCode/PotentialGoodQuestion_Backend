@@ -61,8 +61,8 @@ public class GrowthService {
         // 아이의 전체 세션 목록 (최근 활동 순)
         List<StorySession> sessions = sessionRepository.findByChildIdOrderByLastActivityAtDesc(childId);
 
-        // 아이 전체 발화 분석을 한 번에 로드 (N+1 방지)
-        List<UtteranceAnalysis> allAnalyses = analysisRepository.findByMessageSessionChildId(childId);
+        // 아이 전체 발화 분석을 한 번에 로드 (message, session fetch join으로 N+1 방지)
+        List<UtteranceAnalysis> allAnalyses = analysisRepository.findByChildIdWithMessageAndSession(childId);
 
         // 세션 ID별로 탐지 요소 그룹핑
         Map<Long, Set<String>> elementsBySession = allAnalyses.stream()
