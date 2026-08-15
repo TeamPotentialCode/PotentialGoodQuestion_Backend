@@ -26,11 +26,15 @@ public class StoryController {
     private final StoryService storyService;
     private final StorySceneService storySceneService;
 
-    @Operation(summary = "이야기 목록 조회", description = "공개된 이야기 목록을 반환합니다. topic 파라미터로 주제 필터링이 가능합니다.")
+    @Operation(summary = "이야기 목록 조회",
+            description = "공개된 이야기 목록을 반환합니다. topic 파라미터로 주제 필터링이 가능하며, "
+                    + "여러 개 전달 시 하나라도 해당하는 이야기를 반환합니다(OR). "
+                    + "예: ?topic=다름&topic=자기이해 또는 ?topic=다름,자기이해")
     @GetMapping
     public ResponseEntity<ApiResponse<List<StoryResponseDto.StorySummary>>> getStories(
-            @Parameter(description = "주제 필터 (예: 다름, 자기이해)") @RequestParam(required = false) String topic) {
-        List<StoryResponseDto.StorySummary> stories = storyService.getStories(topic);
+            @Parameter(description = "주제 필터 (복수 지정 가능, 예: 다름, 자기이해)")
+            @RequestParam(name = "topic", required = false) List<String> topics) {
+        List<StoryResponseDto.StorySummary> stories = storyService.getStories(topics);
         return ResponseEntity.ok(ApiResponse.success("이야기 목록을 조회했습니다.", stories));
     }
 
