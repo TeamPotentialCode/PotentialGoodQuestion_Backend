@@ -34,7 +34,9 @@ public class JsonUtils {
     public Map<String, String> toStringMap(String json) {
         try {
             if (isEmpty(json)) return new HashMap<>();
-            return objectMapper.readValue(json, new TypeReference<>() {});
+            Map<String, String> result = objectMapper.readValue(json, new TypeReference<>() {});
+            // JSON null ("null" 문자열) 파싱 시 readValue가 null을 반환할 수 있음
+            return result != null ? result : new HashMap<>();
         } catch (Exception e) { return new HashMap<>(); }
     }
 

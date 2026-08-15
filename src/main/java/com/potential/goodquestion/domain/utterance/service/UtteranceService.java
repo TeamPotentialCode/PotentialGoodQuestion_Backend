@@ -39,6 +39,8 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @RequiredArgsConstructor
@@ -86,7 +88,16 @@ public class UtteranceService {
         List<DetectedElement> processedElements = postProcessor.process(
                 rawAnalysis.detectedElements(), sanitizedText);
 
-        asyncSaver.save(childMessage, rawAnalysis, processedElements);
+        // 부모 트랜잭션 커밋 후 실행 — message가 DB에 존재한 뒤 FK INSERT 시도
+        Message finalChildMessage = childMessage;
+        List<DetectedElement> finalProcessedElements = processedElements;
+        AnalysisResponse finalRawAnalysis = rawAnalysis;
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                asyncSaver.save(finalChildMessage, finalRawAnalysis, finalProcessedElements);
+            }
+        });
 
         Set<String> accumulated = new HashSet<>(jsonUtils.toStringSet(session.getAccumulatedElements()));
         Set<String> newlyDetected = processedElements.stream()
