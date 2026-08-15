@@ -5,6 +5,7 @@ import com.potential.goodquestion.domain.child.entity.ChildConsent;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -31,4 +32,11 @@ public interface ChildConsentRepository extends JpaRepository<ChildConsent, Long
      */
     @Query("SELECT COUNT(c) > 0 FROM ChildConsent c WHERE c.child = :child AND c.withdrawnAt IS NULL")
     boolean existsActiveConsentByChild(@Param("child") Child child);
+
+    /**
+     * 아이의 모든 동의 기록 삭제 (아이 프로필 삭제 시 연관 데이터 정리용)
+     */
+    @Modifying
+    @Query("DELETE FROM ChildConsent c WHERE c.child.id = :childId")
+    void deleteByChildId(@Param("childId") Long childId);
 }

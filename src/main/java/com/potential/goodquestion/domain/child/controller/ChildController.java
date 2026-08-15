@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,6 +39,15 @@ public class ChildController {
         return ResponseEntity.ok(ApiResponse.success("아이 목록을 조회했습니다.", children));
     }
 
+    @Operation(summary = "아이 프로필 단건 조회", description = "아이 ID로 프로필 하나를 반환합니다.")
+    @GetMapping("/{childId}")
+    public ResponseEntity<ApiResponse<ChildResponseDto.ChildInfo>> getChild(
+            @AuthenticationPrincipal CustomUserPrincipal principal,
+            @Parameter(description = "아이 ID") @PathVariable Long childId) {
+        ChildResponseDto.ChildInfo child = childService.getChild(principal.getParentId(), childId);
+        return ResponseEntity.ok(ApiResponse.success("아이 프로필을 조회했습니다.", child));
+    }
+
     @Operation(summary = "아이 프로필 등록", description = "보호자 계정에 아이를 등록합니다.")
     @PostMapping
     public ResponseEntity<ApiResponse<ChildResponseDto.ChildInfo>> createChild(
@@ -56,5 +66,15 @@ public class ChildController {
             @Valid @RequestBody ChildRequestDto.Update request) {
         ChildResponseDto.ChildInfo child = childService.updateChild(principal.getParentId(), childId, request);
         return ResponseEntity.ok(ApiResponse.success("아이 프로필이 수정되었습니다.", child));
+    }
+
+    @Operation(summary = "아이 프로필 삭제",
+            description = "아이 프로필과 연관 데이터(세션, 대화, 발화 분석, 활동 결과, 단어장, 동의 기록)를 함께 삭제합니다.")
+    @DeleteMapping("/{childId}")
+    public ResponseEntity<ApiResponse<Void>> deleteChild(
+            @AuthenticationPrincipal CustomUserPrincipal principal,
+            @Parameter(description = "아이 ID") @PathVariable Long childId) {
+        childService.deleteChild(principal.getParentId(), childId);
+        return ResponseEntity.ok(ApiResponse.success("아이 프로필이 삭제되었습니다.", null));
     }
 }

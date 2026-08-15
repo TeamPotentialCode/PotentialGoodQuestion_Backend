@@ -5,6 +5,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /**
  * StorySession 레포지토리
@@ -42,4 +45,12 @@ public interface StorySessionRepository extends JpaRepository<StorySession, Long
      * 특정 기간 내 시작된 세션 수 (오늘 세션 수 집계용)
      */
     long countByStartedAtBetween(LocalDateTime start, LocalDateTime end);
+
+    /**
+     * 아이의 모든 세션 삭제 (아이 프로필 삭제 시 연관 데이터 정리용)
+     * 참조하는 messages, post_activity_results 를 먼저 삭제한 뒤 호출해야 한다.
+     */
+    @Modifying
+    @Query("DELETE FROM StorySession s WHERE s.child.id = :childId")
+    void deleteByChildId(@Param("childId") Long childId);
 }

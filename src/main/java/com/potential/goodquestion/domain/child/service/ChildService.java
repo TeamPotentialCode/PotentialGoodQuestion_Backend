@@ -4,10 +4,16 @@ import com.potential.goodquestion.common.code.ChildErrorCode;
 import com.potential.goodquestion.common.exception.CustomException;
 import com.potential.goodquestion.domain.child.dto.ChildRequestDto;
 import com.potential.goodquestion.domain.child.dto.ChildResponseDto;
+import com.potential.goodquestion.domain.activity.repository.ActivityRepository;
 import com.potential.goodquestion.domain.child.entity.Child;
+import com.potential.goodquestion.domain.child.repository.ChildConsentRepository;
 import com.potential.goodquestion.domain.child.repository.ChildRepository;
+import com.potential.goodquestion.domain.message.repository.MessageRepository;
 import com.potential.goodquestion.domain.parent.entity.Parent;
 import com.potential.goodquestion.domain.parent.repository.ParentRepository;
+import com.potential.goodquestion.domain.storysession.repository.StorySessionRepository;
+import com.potential.goodquestion.domain.utterance.repository.UtteranceAnalysisRepository;
+import com.potential.goodquestion.domain.word.repository.WordRepository;
 import java.time.Year;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +26,10 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * 담당 API:
  * - GET  /api/children         : 로그인한 보호자의 아이 목록 전체 조회
+ * - GET  /api/children/{id}    : 아이 프로필 단건 조회
  * - POST /api/children         : 아이 프로필 등록
  * - PATCH /api/children/{id}   : 아이 프로필 수정 (이름, 나이)
+ * - DELETE /api/children/{id}  : 아이 프로필 삭제 (연관 데이터 포함)
  *
  * 보안:
  * - 모든 메서드에서 parentId를 기준으로 소유권 검증
@@ -34,6 +42,12 @@ public class ChildService {
 
     private final ChildRepository childRepository;
     private final ParentRepository parentRepository;
+    private final ChildConsentRepository childConsentRepository;
+    private final StorySessionRepository storySessionRepository;
+    private final MessageRepository messageRepository;
+    private final UtteranceAnalysisRepository utteranceAnalysisRepository;
+    private final ActivityRepository activityRepository;
+    private final WordRepository wordRepository;
 
     /**
      * 로그인한 보호자의 아이 목록 전체 조회
@@ -46,6 +60,17 @@ public class ChildService {
         return childRepository.findAllByParent(parent).stream()
                 .map(ChildResponseDto.ChildInfo::from)
                 .toList();
+    }
+
+    /**
+     * 아이 프로필 단건 조회
+     *
+     * @param parentId JWT에서 추출한 보호자 ID (소유권 검증용)
+     * @param childId  조회할 아이 ID
+     * @return 아이 프로필
+     */
+    public ChildResponseDto.ChildInfo getChild(Long parentId, Long childId) {
+        return ChildResponseDto.ChildInfo.from(getChildWithOwnerCheck(parentId, childId));
     }
 
     /**
@@ -89,6 +114,34 @@ public class ChildService {
         Child child = getChildWithOwnerCheck(parentId, childId);
         child.updateProfile(request.getName(), request.getBirthYear());
         return ChildResponseDto.ChildInfo.from(child);
+    }
+
+    /**
+     * 아이 프로필 삭제
+     *
+     * 소프트 삭제(플래그 컬럼) 체계가 없는 프로젝트이므로 기존 삭제 구현
+     * (WordService.deleteWord, AdminService.deleteScene)과 동일하게 하드 삭제한다.
+     *
+     * 아이에 연결된 데이터를 외래키 역순으로 함께 삭제한다.
+     *   utterance_analyses -> messages -> post_activity_results -> story_sessions
+     *   -> words -> child_consents -> children
+     * 엔티티에 cascade 설정이 없어 이 순서를 지키지 않으면 외래키 제약 위반이 발생한다.
+     *
+     * @param parentId JWT에서 추출한 보호자 ID (소유권 검증용)
+     * @param childId  삭제할 아이 ID
+     */
+    @Transactional
+    public void deleteChild(Long parentId, Long childId) {
+        Child child = getChildWithOwnerCheck(parentId, childId);
+
+        utteranceAnalysisRepository.deleteByChildId(childId);
+        messageRepository.deleteByChildId(childId);
+        activityRepository.deleteByChildId(childId);
+        storySessionRepository.deleteByChildId(childId);
+        wordRepository.deleteByChildId(childId);
+        childConsentRepository.deleteByChildId(childId);
+
+        childRepository.delete(child);
     }
 
     // ─────────── private ────────────────
