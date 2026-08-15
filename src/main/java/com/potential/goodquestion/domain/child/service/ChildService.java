@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * 담당 API:
  * - GET  /api/children         : 로그인한 보호자의 아이 목록 전체 조회
+ * - GET  /api/children/{id}    : 아이 프로필 단건 조회
  * - POST /api/children         : 아이 프로필 등록
  * - PATCH /api/children/{id}   : 아이 프로필 수정 (이름, 나이)
  *
@@ -46,6 +47,17 @@ public class ChildService {
         return childRepository.findAllByParent(parent).stream()
                 .map(ChildResponseDto.ChildInfo::from)
                 .toList();
+    }
+
+    /**
+     * 아이 프로필 단건 조회
+     *
+     * @param parentId JWT에서 추출한 보호자 ID (소유권 검증용)
+     * @param childId  조회할 아이 ID
+     * @return 아이 프로필
+     */
+    public ChildResponseDto.ChildInfo getChild(Long parentId, Long childId) {
+        return ChildResponseDto.ChildInfo.from(getChildWithOwnerCheck(parentId, childId));
     }
 
     /**

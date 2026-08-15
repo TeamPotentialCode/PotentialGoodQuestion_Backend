@@ -38,6 +38,15 @@ public class ChildController {
         return ResponseEntity.ok(ApiResponse.success("아이 목록을 조회했습니다.", children));
     }
 
+    @Operation(summary = "아이 프로필 단건 조회", description = "아이 ID로 프로필 하나를 반환합니다.")
+    @GetMapping("/{childId}")
+    public ResponseEntity<ApiResponse<ChildResponseDto.ChildInfo>> getChild(
+            @AuthenticationPrincipal CustomUserPrincipal principal,
+            @Parameter(description = "아이 ID") @PathVariable Long childId) {
+        ChildResponseDto.ChildInfo child = childService.getChild(principal.getParentId(), childId);
+        return ResponseEntity.ok(ApiResponse.success("아이 프로필을 조회했습니다.", child));
+    }
+
     @Operation(summary = "아이 프로필 등록", description = "보호자 계정에 아이를 등록합니다.")
     @PostMapping
     public ResponseEntity<ApiResponse<ChildResponseDto.ChildInfo>> createChild(
