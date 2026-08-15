@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
@@ -88,4 +89,51 @@ public class StoryScene extends BaseEntity {
     @Comment("최대 허용 턴 수")
     @Column(name = "max_turns", nullable = false)
     private Integer maxTurns;
+
+    public void update(Integer sceneOrder, String sceneDescription, String imageUrl,
+                       String conflict, String characterName, String characterOpening,
+                       String characterClosing, String sceneGoal, String requiredElements,
+                       String elementCriteria, String remainingWorries,
+                       boolean hasMission, Integer preferredTurns, Integer maxTurns) {
+        this.sceneOrder = sceneOrder;
+        this.sceneDescription = sceneDescription;
+        this.imageUrl = imageUrl;
+        this.conflict = conflict;
+        this.characterName = characterName;
+        this.characterOpening = characterOpening;
+        this.characterClosing = characterClosing;
+        this.sceneGoal = sceneGoal;
+        this.requiredElements = requiredElements;
+        this.elementCriteria = elementCriteria;
+        this.remainingWorries = remainingWorries;
+        this.hasMission = hasMission;
+        this.preferredTurns = preferredTurns;
+        this.maxTurns = maxTurns;
+    }
+
+    /**
+     * 장면 생성 (관리자 전용)
+     */
+    @Builder
+    public StoryScene(Story story, Integer sceneOrder, String sceneDescription, String imageUrl,
+                      String conflict, String characterName, String characterOpening,
+                      String characterClosing, String sceneGoal, String requiredElements,
+                      String elementCriteria, String remainingWorries,
+                      boolean hasMission, Integer preferredTurns, Integer maxTurns) {
+        this.story = story;
+        this.sceneOrder = sceneOrder;
+        this.sceneDescription = sceneDescription;
+        this.imageUrl = imageUrl;
+        this.conflict = conflict;
+        this.characterName = characterName;
+        this.characterOpening = characterOpening;
+        this.characterClosing = characterClosing;
+        this.sceneGoal = sceneGoal;
+        this.requiredElements = requiredElements;
+        this.elementCriteria = elementCriteria;
+        this.remainingWorries = remainingWorries;
+        this.hasMission = hasMission;
+        this.preferredTurns = preferredTurns;
+        this.maxTurns = maxTurns;
+    }
 }

@@ -12,11 +12,13 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -83,7 +85,18 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // 토큰에서 보호자 ID 추출 후 DB 조회
+            // 관리자 토큰: role: ADMIN 클레임이 있으면 DB 조회 없이 ROLE_ADMIN 권한 부여
+            String role = jwtUtil.getRole(token);
+            if ("ADMIN".equals(role)) {
+                UsernamePasswordAuthenticationToken adminAuth = new UsernamePasswordAuthenticationToken(
+                        "ADMIN", null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+                adminAuth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(adminAuth);
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            // 일반 사용자 토큰: 보호자 ID 추출 후 DB 조회
             Long parentId = jwtUtil.getParentId(token);
             CustomUserPrincipal userDetails = userDetailsService.loadUserById(parentId);
 

@@ -86,4 +86,21 @@ public class Story extends BaseEntity {
         this.postActivityConfig = postActivityConfig;
         this.status = status != null ? status : "published";
     }
+
+    public void update(String title, String summary, String difficulty, String topics,
+                       String thumbnailUrl, String introduction, String situation,
+                       String childRole, Integer estimatedMinutes,
+                       String postActivityConfig, String status) {
+        this.title = title;
+        this.summary = summary;
+        this.difficulty = difficulty;
+        this.topics = topics;
+        this.thumbnailUrl = thumbnailUrl;
+        this.introduction = introduction;
+        this.situation = situation;
+        this.childRole = childRole;
+        this.estimatedMinutes = estimatedMinutes;
+        this.postActivityConfig = postActivityConfig;
+        this.status = status != null ? status : "published";
+    }
 }
