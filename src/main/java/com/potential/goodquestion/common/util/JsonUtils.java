@@ -20,14 +20,17 @@ public class JsonUtils {
         try {
             if (isEmpty(json)) return new HashSet<>();
             List<String> list = objectMapper.readValue(json, new TypeReference<>() {});
-            return new HashSet<>(list);
+            // JSON null ("null" 문자열) 파싱 시 readValue가 null을 반환할 수 있음
+            return list != null ? new HashSet<>(list) : new HashSet<>();
         } catch (Exception e) { return new HashSet<>(); }
     }
 
     public List<String> toStringList(String json) {
         try {
             if (isEmpty(json)) return List.of();
-            return objectMapper.readValue(json, new TypeReference<>() {});
+            List<String> list = objectMapper.readValue(json, new TypeReference<>() {});
+            // JSON null ("null" 문자열) 파싱 시 readValue가 null을 반환할 수 있음
+            return list != null ? list : List.of();
         } catch (Exception e) { return List.of(); }
     }
 
@@ -44,6 +47,8 @@ public class JsonUtils {
         try {
             if (isEmpty(json)) return List.of();
             List<Map<String, String>> elements = objectMapper.readValue(json, new TypeReference<>() {});
+            // JSON null ("null" 문자열) 파싱 시 readValue가 null을 반환할 수 있음
+            if (elements == null) return List.of();
             return elements.stream()
                     .map(e -> e.get("type"))
                     .filter(t -> t != null && !t.isBlank())
