@@ -41,15 +41,18 @@ public class Auth extends BaseEntity {
     @Column(name = "refresh_token", nullable = false, length = 500)
     private String refreshToken;
 
+    @Comment("소셜 provider Access Token (Google/Naver unlink 시 사용, LOCAL은 null)")
+    @Column(name = "oauth_access_token", length = 2000)
+    private String oauthAccessToken;
+
     @Builder
-    public Auth(Parent parent, String refreshToken) {
+    public Auth(Parent parent, String refreshToken, String oauthAccessToken) {
         this.parent = parent;
         this.refreshToken = refreshToken;
+        this.oauthAccessToken = oauthAccessToken;
     }
 
-    /**
-     * Auth 토큰 생성
-     */
+    /** LOCAL 로그인용 생성 */
     public static Auth create(Parent parent, String refreshToken) {
         return Auth.builder()
                 .parent(parent)
@@ -57,10 +60,20 @@ public class Auth extends BaseEntity {
                 .build();
     }
 
-    /**
-     * Refresh Token 갱신
-     */
+    /** 소셜 로그인용 생성 (provider access token 포함) */
+    public static Auth createOAuth(Parent parent, String refreshToken, String oauthAccessToken) {
+        return Auth.builder()
+                .parent(parent)
+                .refreshToken(refreshToken)
+                .oauthAccessToken(oauthAccessToken)
+                .build();
+    }
+
     public void updateRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
+    }
+
+    public void updateOauthToken(String oauthAccessToken) {
+        this.oauthAccessToken = oauthAccessToken;
     }
 }

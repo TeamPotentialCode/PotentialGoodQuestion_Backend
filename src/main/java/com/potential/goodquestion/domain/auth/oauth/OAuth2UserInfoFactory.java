@@ -25,6 +25,8 @@ public class OAuth2UserInfoFactory {
         return switch (registrationId.toLowerCase()) {
             case "google" -> new GoogleUserInfo(attributes);
             case "naver"  -> new NaverUserInfo(attributes);
+            // TODO: 카카오 키 발급 후 아래 주석 해제 + application.yaml 카카오 설정 주석 해제
+            // case "kakao"  -> new KakaoUserInfo(attributes);
             default -> throw new IllegalArgumentException("지원하지 않는 OAuth2 제공자입니다: " + registrationId);
         };
     }

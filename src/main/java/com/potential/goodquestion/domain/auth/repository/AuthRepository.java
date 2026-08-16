@@ -24,6 +24,11 @@ public interface AuthRepository extends JpaRepository<Auth, Long> {
     Optional<Auth> findByRefreshToken(String refreshToken);
 
     /**
+     * 보호자 ID로 토큰 조회 (소셜 unlink 시 oauth_access_token 조회용)
+     */
+    Optional<Auth> findByParentId(Long parentId);
+
+    /**
      * 보호자의 리프레시 토큰 삭제 (회원 탈퇴 시 정리용)
      */
     @Modifying

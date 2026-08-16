@@ -64,11 +64,15 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String accessToken = jwtUtil.generateAccessToken(parent.getId());
         String refreshToken = jwtUtil.generateRefreshToken(parent.getId());
 
-        // Refresh Token DB 저장 (기존 있으면 갱신, 없으면 신규 생성)
+        // Refresh Token + provider Access Token DB 저장
+        String oauthAccessToken = oAuth2User.getOauthAccessToken();
         authRepository.findByParent(parent)
                 .ifPresentOrElse(
-                        auth -> auth.updateRefreshToken(refreshToken),
-                        () -> authRepository.save(Auth.create(parent, refreshToken))
+                        auth -> {
+                            auth.updateRefreshToken(refreshToken);
+                            auth.updateOauthToken(oauthAccessToken);
+                        },
+                        () -> authRepository.save(Auth.createOAuth(parent, refreshToken, oauthAccessToken))
                 );
 
         // JSON 응답 반환

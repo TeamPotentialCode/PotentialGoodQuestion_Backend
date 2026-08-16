@@ -32,6 +32,9 @@ public class CustomOAuth2User implements OAuth2User {
     /** OAuth2 제공자로부터 받은 원본 사용자 정보 Map */
     private final Map<String, Object> attributes;
 
+    /** 소셜 provider Access Token (unlink 시 저장용) */
+    private final String oauthAccessToken;
+
     /** Spring Security OAuth2는 getName()이 비어있으면 안 됨 — 이메일을 식별자로 사용 */
     @Override
     public String getName() {

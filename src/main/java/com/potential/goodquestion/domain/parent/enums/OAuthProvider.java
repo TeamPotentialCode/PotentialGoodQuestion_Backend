@@ -8,5 +8,6 @@ package com.potential.goodquestion.domain.parent.enums;
 public enum OAuthProvider {
     LOCAL,
     GOOGLE,
-    NAVER
+    NAVER,
+    KAKAO  // TODO: 카카오 키 발급 후 활성화
 }
