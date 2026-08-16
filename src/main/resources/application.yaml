@@ -86,6 +86,7 @@ jwt:
   secret: ${JWT_SECRET_KEY}                    # Base64 인코딩된 256bit 이상 비밀키
   access-expiration: ${JWT_EXPIRATION_TIME:3600000}          # 기본 1시간 (ms)
   refresh-expiration: ${JWT_REFRESH_EXPIRATION_TIME:604800000}  # 기본 7일 (ms)
+  admin-expiration: ${JWT_ADMIN_EXPIRATION_TIME:604800000}   # 기본 7일 (ms) — refresh 없는 어드민 토큰
 
 # ────────────────────────────────────────
 # OAuth2 Redirect URIs

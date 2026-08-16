@@ -32,6 +32,9 @@ public class JwtUtil {
     @Value("${jwt.refresh-expiration}")
     private long refreshExpiration;
 
+    @Value("${jwt.admin-expiration}")
+    private long adminExpiration;
+
     private Key key;
     private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
 
@@ -71,7 +74,7 @@ public class JwtUtil {
                 .claim("tokenType", "ACCESS")
                 .claim("role", "ADMIN")
                 .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + accessExpiration))
+                .setExpiration(new Date(now.getTime() + adminExpiration))
                 .signWith(key, signatureAlgorithm)
                 .compact();
     }
