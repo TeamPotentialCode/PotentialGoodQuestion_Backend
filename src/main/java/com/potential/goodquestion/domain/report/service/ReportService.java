@@ -38,9 +38,23 @@ public class ReportService {
     private static final Set<String> EMPATHY_ELEMENTS = Set.of("EMOTION", "EMPATHY");
     private static final Set<String> PERSPECTIVE_ELEMENTS = Set.of("PERSPECTIVE", "REQUEST");
 
-    public ReportResponse getReport(Long sessionId) {
+    /**
+     * 보호자 리포트 조회
+     *
+     * 리포트에는 아이의 발화 원문이 포함되므로 세션의 아이가
+     * 로그인한 보호자 소유인지 반드시 검증한다.
+     *
+     * @param sessionId 세션 ID
+     * @param parentId  JWT에서 추출한 보호자 ID (소유권 검증용)
+     */
+    public ReportResponse getReport(Long sessionId, Long parentId) {
         StorySession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new CustomException(SessionErrorCode.SESSION_NOT_FOUND));
+
+        // 다른 보호자의 세션 리포트 접근 차단 (아동 발화 노출 방지)
+        if (!session.getChild().getParent().getId().equals(parentId)) {
+            throw new CustomException(SessionErrorCode.SESSION_ACCESS_DENIED);
+        }
 
         List<StoryScene> scenes = sceneRepository.findByStoryIdOrderBySceneOrder(
                 session.getStory().getId());
