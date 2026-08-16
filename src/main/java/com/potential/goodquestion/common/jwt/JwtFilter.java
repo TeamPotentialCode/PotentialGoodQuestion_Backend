@@ -20,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -124,6 +125,11 @@ public class JwtFilter extends OncePerRequestFilter {
             // 토큰이 비어있거나 null
             log.warn("JWT 토큰이 비어있음: {}", e.getMessage());
             sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "토큰이 비어있습니다.");
+        } catch (UsernameNotFoundException e) {
+            // 회원 탈퇴로 계정이 삭제됐지만 액세스 토큰이 아직 만료되지 않은 경우
+            // 서버 오류가 아니라 인증 실패이므로 401을 반환한다.
+            log.warn("토큰에 해당하는 계정 없음: {}", e.getMessage());
+            sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "유효하지 않은 토큰입니다.");
         } catch (Exception e) {
             log.error("JWT 처리 중 예외 발생: {}", e.getMessage());
             sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "인증 처리 중 오류가 발생했습니다.");

@@ -47,6 +47,14 @@ public interface StorySessionRepository extends JpaRepository<StorySession, Long
     long countByStartedAtBetween(LocalDateTime start, LocalDateTime end);
 
     /**
+     * 보호자의 모든 세션 삭제 (회원 탈퇴 시 연관 데이터 정리용)
+     * 참조하는 messages, post_activity_results 를 먼저 삭제한 뒤 호출해야 한다.
+     */
+    @Modifying
+    @Query("DELETE FROM StorySession s WHERE s.child.parent.id = :parentId")
+    void deleteByParentId(@Param("parentId") Long parentId);
+
+    /**
      * 아이의 모든 세션 삭제 (아이 프로필 삭제 시 연관 데이터 정리용)
      * 참조하는 messages, post_activity_results 를 먼저 삭제한 뒤 호출해야 한다.
      */

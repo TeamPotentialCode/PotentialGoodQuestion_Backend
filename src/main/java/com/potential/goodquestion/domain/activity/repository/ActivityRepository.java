@@ -24,6 +24,13 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
     Optional<Activity> findBySessionId(Long sessionId);
 
     /**
+     * 보호자의 모든 활동 결과 삭제 (회원 탈퇴 시 연관 데이터 정리용)
+     */
+    @Modifying
+    @Query("DELETE FROM Activity a WHERE a.session.child.parent.id = :parentId")
+    void deleteByParentId(@Param("parentId") Long parentId);
+
+    /**
      * 아이의 모든 활동 결과 삭제 (아이 프로필 삭제 시 연관 데이터 정리용)
      */
     @Modifying
