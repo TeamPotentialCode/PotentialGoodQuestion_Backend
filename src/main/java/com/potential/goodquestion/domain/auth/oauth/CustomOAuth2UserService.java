@@ -56,9 +56,12 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         // 4. DB에 없으면 자동 회원가입, 있으면 이름 업데이트
         Parent parent = saveOrUpdate(userInfo);
 
-        // 5. Parent + 원본 attributes를 담은 CustomOAuth2User 반환
+        // 5. provider access token 추출 — 탈퇴 시 unlink 호출에 사용
+        String oauthAccessToken = userRequest.getAccessToken().getTokenValue();
+
+        // 6. Parent + 원본 attributes + provider token을 담은 CustomOAuth2User 반환
         //    → OAuth2SuccessHandler에서 parent.getId()로 JWT 발급
-        return new CustomOAuth2User(parent, oAuth2User.getAttributes());
+        return new CustomOAuth2User(parent, oAuth2User.getAttributes(), oauthAccessToken);
     }
 
     /**
