@@ -17,8 +17,6 @@ public class CacheConfig {
         CaffeineCacheManager manager = new CaffeineCacheManager();
         manager.registerCustomCache("tts",
                 Caffeine.newBuilder().maximumSize(200).expireAfterWrite(6, TimeUnit.HOURS).build());
-        manager.registerCustomCache("scenes",
-                Caffeine.newBuilder().maximumSize(100).expireAfterWrite(24, TimeUnit.HOURS).build());
         return manager;
     }
 }
